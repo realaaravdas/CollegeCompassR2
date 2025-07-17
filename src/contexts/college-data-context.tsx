@@ -1,8 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
+import { doc, setDoc, getDoc, collection, getDocs, onSnapshot, writeBatch, deleteDoc } from 'firebase/firestore';
+import { useAuth } from './auth-context';
 import type { College } from '@/lib/types';
+import { db } from '@/lib/firebase-config';
+
 import { populateCollegeInfo } from '@/ai/flows/populate-college-info';
 import { estimateAcceptanceRate as estimateAcceptanceRateFlow } from '@/ai/flows/estimate-acceptance-rate';
 
@@ -15,44 +19,79 @@ interface CollegeDataContextType {
   setApiKey: (key: string) => void;
   isAiLoading: boolean;
   addCollege: (collegeName: string) => Promise<College>;
-  updateCollege: (collegeId: string, data: Partial<College>) => void;
+  updateCollege: (collegeId: string, data: Partial<Omit<College, 'id'>>) => void;
+  deleteCollege: (collegeId: string) => Promise<void>;
   estimateAcceptanceRate: (college: College) => Promise<void>;
 }
 
 const CollegeDataContext = createContext<CollegeDataContextType | undefined>(undefined);
 
 export function CollegeDataProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const updateCollege = useCallback((collegeId: string, data: Partial<College>) => {
-    setColleges((prev) =>
-      prev.map((c) => (c.id === collegeId ? { ...c, ...data } : c))
-    );
-  }, []);
+  useEffect(() => {
+    if (!user) {
+      setColleges([]);
+      setSelectedCollegeId(null);
+      return;
+    }
+
+    const collRef = collection(db, 'users', user.uid, 'colleges');
+    const unsubscribe = onSnapshot(collRef, (snapshot) => {
+      const collegesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as College));
+      setColleges(collegesData);
+      
+      if (collegesData.length > 0 && !snapshot.docs.find(d => d.id === selectedCollegeId)) {
+        setSelectedCollegeId(collegesData[0].id);
+      } else if (collegesData.length === 0) {
+        setSelectedCollegeId(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user, selectedCollegeId]);
+
+
+  const updateCollege = useCallback(async (collegeId: string, data: Partial<College>) => {
+    if (!user) return;
+    const docRef = doc(db, 'users', user.uid, 'colleges', collegeId);
+    await setDoc(docRef, data, { merge: true });
+  }, [user]);
 
   const addCollege = useCallback(
     async (collegeName: string): Promise<College> => {
+      if (!user) throw new Error("User not authenticated");
       setIsAiLoading(true);
       try {
         const collegeInfo = await populateCollegeInfo({ collegeName }, { apiKey });
+        const newCollegeId = doc(collection(db, 'users', user.uid, 'colleges')).id;
         const newCollege: College = {
-          id: Date.now().toString(),
+          id: newCollegeId,
           name: collegeName,
           ...collegeInfo,
           essays: [],
           numberOfEssays: 0,
         };
-        setColleges((prev) => [...prev, newCollege]);
+
+        const docRef = doc(db, 'users', user.uid, 'colleges', newCollege.id);
+        await setDoc(docRef, newCollege);
+        
         return newCollege;
       } finally {
         setIsAiLoading(false);
       }
     },
-    [apiKey]
+    [user, apiKey]
   );
+
+  const deleteCollege = useCallback(async (collegeId: string) => {
+      if (!user) return;
+      await deleteDoc(doc(db, 'users', user.uid, 'colleges', collegeId));
+  }, [user]);
 
   const estimateAcceptanceRate = useCallback(async (college: College) => {
     if (!college.gpa || !college.testScore || !college.selectedMajor) {
@@ -89,9 +128,10 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       isAiLoading,
       addCollege,
       updateCollege,
+      deleteCollege,
       estimateAcceptanceRate,
     }),
-    [colleges, selectedCollegeId, apiKey, isAiLoading, addCollege, updateCollege, estimateAcceptanceRate]
+    [colleges, selectedCollegeId, apiKey, isAiLoading, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate]
   );
 
   return (

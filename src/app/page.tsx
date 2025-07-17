@@ -1,8 +1,12 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Compass } from 'lucide-react';
+'use client';
 
-export default function LandingPage() {
+import { Compass } from 'lucide-react';
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { Button } from '@/components/ui/button';
+
+function LandingContent() {
+  const { user, loading, signInWithGoogle } = useAuth();
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="p-4 flex justify-between items-center">
@@ -25,8 +29,8 @@ export default function LandingPage() {
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
             College Compass is your AI-powered copilot, simplifying your application journey. Track deadlines, manage essays, and estimate your admission chances—all in one place.
           </p>
-          <Button asChild size="lg">
-            <Link href="/dashboard">Get Started</Link>
+          <Button onClick={signInWithGoogle} size="lg" disabled={loading}>
+            {loading ? 'Loading...' : 'Get Started with Google'}
           </Button>
           <p className="text-sm text-gray-500 mt-4">
             Sign in with Google to securely save your progress.
@@ -38,4 +42,13 @@ export default function LandingPage() {
       </footer>
     </div>
   );
+}
+
+
+export default function LandingPage() {
+  return (
+    <AuthProvider>
+      <LandingContent />
+    </AuthProvider>
+  )
 }

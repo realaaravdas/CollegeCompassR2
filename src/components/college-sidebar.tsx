@@ -7,7 +7,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useCollegeData } from '@/contexts/college-data-context';
 import { GraduationCap } from 'lucide-react';
@@ -18,7 +17,7 @@ export function CollegeSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <SidebarTrigger />
+        {/* The trigger is now in AppHeader.tsx to be always accessible */}
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
