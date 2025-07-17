@@ -46,10 +46,11 @@ const listMajorsFlow = globalAi.defineFlow(
     outputSchema: ListMajorsOutputSchema,
   },
   async ({ input, apiKey }) => {
+    const key = apiKey || process.env.GEMINI_API_KEY;
     let ai = globalAi;
-    if (apiKey) {
+    if (key) {
       ai = genkit({
-        plugins: [googleAI({ apiKey })],
+        plugins: [googleAI({ apiKey: key })],
       });
     }
     const prompt = ai.definePrompt({

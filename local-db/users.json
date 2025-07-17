@@ -1,0 +1,6 @@
+[
+  {
+    "username": "Test",
+    "passwordHash": "$argon2id$v=19$m=19456,t=2,p=1$24jNrW4uQIKnbA7KmUaJAQ$OIMlr9W+vJ5gTssa8I14KgzLTvHJZEgymDmDmO1bXFw"
+  }
+]

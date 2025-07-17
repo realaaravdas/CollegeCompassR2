@@ -57,10 +57,11 @@ const populateCollegeInfoFlow = globalAi.defineFlow(
     outputSchema: PopulateCollegeInfoOutputSchema,
   },
   async ({ input, apiKey }) => {
+    const key = apiKey || process.env.GEMINI_API_KEY;
     let ai = globalAi;
-    if (apiKey) {
+    if (key) {
       ai = genkit({
-        plugins: [googleAI({ apiKey })],
+        plugins: [googleAI({ apiKey: key })],
       });
     }
 
