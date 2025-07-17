@@ -64,7 +64,7 @@ const estimateAcceptanceRateFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'estimateAcceptanceRatePrompt_local',
-      model: 'gemini-1.5-flash-latest',
+      model: googleAI.model('gemini-1.5-flash-latest'),
       input: { schema: EstimateAcceptanceRateInputSchema },
       output: { schema: EstimateAcceptanceRateOutputSchema },
       prompt: `You are an AI assistant specialized in estimating college acceptance rates.

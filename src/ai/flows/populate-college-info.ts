@@ -59,7 +59,7 @@ const populateCollegeInfoFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'populateCollegeInfoPrompt_local',
-      model: 'gemini-1.5-flash-latest',
+      model: googleAI.model('gemini-1.5-flash-latest'),
       input: { schema: PopulateCollegeInfoInputSchema },
       output: { schema: PopulateCollegeInfoOutputSchema },
       prompt: `You are an AI assistant designed to gather information about colleges.
