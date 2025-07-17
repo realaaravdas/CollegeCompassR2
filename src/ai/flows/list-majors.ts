@@ -7,12 +7,14 @@
  * - ListMajorsOutput - The return type for the listMajors function.
  */
 
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 
 const ListMajorsInputSchema = z.object({
-  collegeName: z.string().describe('The name of the college to list majors for.'),
+  collegeName: z
+    .string()
+    .describe('The name of the college to list majors for.'),
 });
 export type ListMajorsInput = z.infer<typeof ListMajorsInputSchema>;
 
@@ -21,7 +23,9 @@ const ListMajorsOptionsSchema = z.object({
 });
 
 const ListMajorsOutputSchema = z.object({
-  majors: z.array(z.string()).describe('A list of majors offered at the college.'),
+  majors: z
+    .array(z.string())
+    .describe('A list of majors offered at the college.'),
 });
 export type ListMajorsOutput = z.infer<typeof ListMajorsOutputSchema>;
 
@@ -29,30 +33,29 @@ export async function listMajors(
   input: ListMajorsInput,
   options?: z.infer<typeof ListMajorsOptionsSchema>
 ): Promise<ListMajorsOutput> {
-  return listMajorsFlow(input, options);
+  if (options?.apiKey) {
+    ai.configure({
+      plugins: [googleAI({ apiKey: options.apiKey })],
+    });
+  }
+  return listMajorsFlow(input);
 }
 
-const prompt = {
+const prompt = ai.definePrompt({
   name: 'listMajorsPrompt',
-  input: {schema: ListMajorsInputSchema},
-  output: {schema: ListMajorsOutputSchema},
+  input: { schema: ListMajorsInputSchema },
+  output: { schema: ListMajorsOutputSchema },
   prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
-};
+});
 
-const listMajorsFlow = genkit.flow(
+const listMajorsFlow = ai.defineFlow(
   {
     name: 'listMajorsFlow',
     inputSchema: ListMajorsInputSchema,
     outputSchema: ListMajorsOutputSchema,
-    optionsSchema: ListMajorsOptionsSchema,
   },
-  async (input, options) => {
-    const ai = genkit({
-      plugins: [googleAI({apiKey: options.apiKey})],
-      model: 'googleai/gemini-2.0-flash',
-    });
-    const p = ai.definePrompt(prompt);
-    const {output} = await p(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );
