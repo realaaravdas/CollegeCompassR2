@@ -8,13 +8,18 @@
  * - PopulateCollegeInfoOutput - The return type for the populateCollegeInfo function.
  */
 
-import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const PopulateCollegeInfoInputSchema = z.object({
   collegeName: z.string().describe('The name of the college to populate information for.'),
 });
 export type PopulateCollegeInfoInput = z.infer<typeof PopulateCollegeInfoInputSchema>;
+
+const PopulateCollegeInfoOptionsSchema = z.object({
+  apiKey: z.string().optional(),
+});
 
 const PopulateCollegeInfoOutputSchema = z.object({
   deadlines: z.string().describe('Important application deadlines for the college.'),
@@ -25,11 +30,14 @@ const PopulateCollegeInfoOutputSchema = z.object({
 });
 export type PopulateCollegeInfoOutput = z.infer<typeof PopulateCollegeInfoOutputSchema>;
 
-export async function populateCollegeInfo(input: PopulateCollegeInfoInput): Promise<PopulateCollegeInfoOutput> {
-  return populateCollegeInfoFlow(input);
+export async function populateCollegeInfo(
+  input: PopulateCollegeInfoInput,
+  options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
+): Promise<PopulateCollegeInfoOutput> {
+  return populateCollegeInfoFlow(input, options);
 }
 
-const prompt = ai.definePrompt({
+const prompt = {
   name: 'populateCollegeInfoPrompt',
   input: {schema: PopulateCollegeInfoInputSchema},
   output: {schema: PopulateCollegeInfoOutputSchema},
@@ -42,16 +50,22 @@ const prompt = ai.definePrompt({
 
   Return the information in the JSON format specified in the output schema.
   `,
-});
+};
 
-const populateCollegeInfoFlow = ai.defineFlow(
+const populateCollegeInfoFlow = genkit.flow(
   {
     name: 'populateCollegeInfoFlow',
     inputSchema: PopulateCollegeInfoInputSchema,
     outputSchema: PopulateCollegeInfoOutputSchema,
+    optionsSchema: PopulateCollegeInfoOptionsSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input, options) => {
+    const ai = genkit({
+      plugins: [googleAI({apiKey: options.apiKey})],
+      model: 'googleai/gemini-2.0-flash',
+    });
+    const p = ai.definePrompt(prompt);
+    const {output} = await p(input);
     return output!;
   }
 );

@@ -9,7 +9,8 @@
  * - EstimateAcceptanceRateOutput - The return type for the estimateAcceptanceRate function.
  */
 
-import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const EstimateAcceptanceRateInputSchema = z.object({
@@ -19,6 +20,10 @@ const EstimateAcceptanceRateInputSchema = z.object({
   testScore: z.number().describe('The standardized test score of the student (e.g., SAT or ACT).'),
 });
 export type EstimateAcceptanceRateInput = z.infer<typeof EstimateAcceptanceRateInputSchema>;
+
+const EstimateAcceptanceRateOptionsSchema = z.object({
+  apiKey: z.string().optional(),
+});
 
 const EstimateAcceptanceRateOutputSchema = z.object({
   acceptanceRateEstimate: z
@@ -35,12 +40,13 @@ const EstimateAcceptanceRateOutputSchema = z.object({
 export type EstimateAcceptanceRateOutput = z.infer<typeof EstimateAcceptanceRateOutputSchema>;
 
 export async function estimateAcceptanceRate(
-  input: EstimateAcceptanceRateInput
+  input: EstimateAcceptanceRateInput,
+  options?: z.infer<typeof EstimateAcceptanceRateOptionsSchema>
 ): Promise<EstimateAcceptanceRateOutput> {
-  return estimateAcceptanceRateFlow(input);
+  return estimateAcceptanceRateFlow(input, options);
 }
 
-const prompt = ai.definePrompt({
+const prompt = {
   name: 'estimateAcceptanceRatePrompt',
   input: {schema: EstimateAcceptanceRateInputSchema},
   output: {schema: EstimateAcceptanceRateOutputSchema},
@@ -55,16 +61,22 @@ const prompt = ai.definePrompt({
 
   Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's GPA and test scores.
 `,
-});
+};
 
-const estimateAcceptanceRateFlow = ai.defineFlow(
+const estimateAcceptanceRateFlow = genkit.flow(
   {
     name: 'estimateAcceptanceRateFlow',
     inputSchema: EstimateAcceptanceRateInputSchema,
     outputSchema: EstimateAcceptanceRateOutputSchema,
+    optionsSchema: EstimateAcceptanceRateOptionsSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input, options) => {
+    const ai = genkit({
+      plugins: [googleAI({apiKey: options.apiKey})],
+      model: 'googleai/gemini-2.0-flash',
+    });
+    const p = ai.definePrompt(prompt);
+    const {output} = await p(input);
     return output!;
   }
 );

@@ -37,7 +37,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
     async (collegeName: string): Promise<College> => {
       setIsAiLoading(true);
       try {
-        const collegeInfo = await populateCollegeInfo({ collegeName });
+        const collegeInfo = await populateCollegeInfo({ collegeName }, {apiKey});
         const newCollege: College = {
           id: Date.now().toString(),
           name: collegeName,
@@ -51,7 +51,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         setIsAiLoading(false);
       }
     },
-    []
+    [apiKey]
   );
 
   const estimateAcceptanceRate = useCallback(async (college: College) => {
@@ -65,7 +65,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         major: college.selectedMajor,
         gpa: college.gpa,
         testScore: college.testScore,
-      });
+      }, {apiKey});
       updateCollege(college.id, {
         estimatedAcceptanceRate: {
           rate: result.acceptanceRateEstimate,
@@ -75,7 +75,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsAiLoading(false);
     }
-  }, [updateCollege]);
+  }, [apiKey, updateCollege]);
 
 
   const value = useMemo(
