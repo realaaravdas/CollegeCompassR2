@@ -3,7 +3,15 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
-import firebaseApp from '@/lib/firebase-config';
+// Directly import the config object and the initialization functions
+import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
+import firebaseConfig from '@/lib/firebase-config';
+
+// --- Firebase Initialization ---
+// This pattern ensures that we don't try to re-initialize the app on every render.
+const app = !getApps().length ? initializeApp(firebaseConfig as FirebaseOptions) : getApp();
+const auth = getAuth(app);
+// --- End Firebase Initialization ---
 
 interface AuthContextType {
   user: User | null;
@@ -14,7 +22,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
