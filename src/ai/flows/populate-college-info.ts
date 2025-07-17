@@ -43,16 +43,25 @@ export type PopulateCollegeInfoOutput = z.infer<
 const populateCollegeInfoFlow = globalAi.defineFlow(
   {
     name: 'populateCollegeInfoFlow',
-    inputSchema: PopulateCollegeInfoInputSchema,
+    inputSchema: z.object({
+      input: PopulateCollegeInfoInputSchema,
+      apiKey: z.string().optional(),
+    }),
     outputSchema: PopulateCollegeInfoOutputSchema,
   },
-  async (input, streamingCallback, context) => {
-    const ai = context.params.ai as typeof globalAi;
+  async ({ input, apiKey }) => {
+    let ai = globalAi;
+    if (apiKey) {
+      ai = genkit({
+        plugins: [googleAI({ apiKey })],
+      });
+    }
+
     const prompt = ai.definePrompt({
-        name: 'populateCollegeInfoPrompt',
-        input: { schema: PopulateCollegeInfoInputSchema },
-        output: { schema: PopulateCollegeInfoOutputSchema },
-        prompt: `You are an AI assistant designed to gather information about colleges.
+      name: 'populateCollegeInfoPrompt_local',
+      input: { schema: PopulateCollegeInfoInputSchema },
+      output: { schema: PopulateCollegeInfoOutputSchema },
+      prompt: `You are an AI assistant designed to gather information about colleges.
       
         Based on the college name provided, you will find the deadlines, application portal URL, an image URL, list of majors, and acceptance rate.
         Use your knowledge and web searches to find the most accurate and up-to-date information.
@@ -68,14 +77,8 @@ const populateCollegeInfoFlow = globalAi.defineFlow(
 );
 
 export async function populateCollegeInfo(
-    input: PopulateCollegeInfoInput,
-    options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
-  ): Promise<PopulateCollegeInfoOutput> {
-    let ai = globalAi;
-    if (options?.apiKey) {
-      ai = genkit({
-        plugins: [googleAI({ apiKey: options.apiKey })],
-      });
-    }
-    return populateCollegeInfoFlow(input, {params: {ai}});
+  input: PopulateCollegeInfoInput,
+  options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
+): Promise<PopulateCollegeInfoOutput> {
+  return populateCollegeInfoFlow({ input, apiKey: options?.apiKey });
 }

@@ -45,20 +45,45 @@ export type EstimateAcceptanceRateOutput = z.infer<
   typeof EstimateAcceptanceRateOutputSchema
 >;
 
+const estimateAcceptanceRatePrompt = globalAi.definePrompt({
+  name: 'estimateAcceptanceRatePrompt',
+  input: { schema: EstimateAcceptanceRateInputSchema },
+  output: { schema: EstimateAcceptanceRateOutputSchema },
+  prompt: `You are an AI assistant specialized in estimating college acceptance rates.
+      
+        Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
+      
+        College Name: {{{collegeName}}}
+        Major: {{{major}}}
+        GPA: {{{gpa}}}
+        Test Score: {{{testScore}}}
+      
+        Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's GPA and test scores.
+      `,
+});
+
 const estimateAcceptanceRateFlow = globalAi.defineFlow(
   {
     name: 'estimateAcceptanceRateFlow',
-    inputSchema: EstimateAcceptanceRateInputSchema,
+    inputSchema: z.object({
+      input: EstimateAcceptanceRateInputSchema,
+      apiKey: z.string().optional(),
+    }),
     outputSchema: EstimateAcceptanceRateOutputSchema,
   },
-  async (input, streamingCallback, context) => {
-    const ai = context.params.ai as typeof globalAi;
+  async ({ input, apiKey }) => {
+    let ai = globalAi;
+    if (apiKey) {
+      ai = genkit({
+        plugins: [googleAI({ apiKey })],
+      });
+    }
 
     const prompt = ai.definePrompt({
-        name: 'estimateAcceptanceRatePrompt',
-        input: { schema: EstimateAcceptanceRateInputSchema },
-        output: { schema: EstimateAcceptanceRateOutputSchema },
-        prompt: `You are an AI assistant specialized in estimating college acceptance rates.
+      name: 'estimateAcceptanceRatePrompt_local',
+      input: { schema: EstimateAcceptanceRateInputSchema },
+      output: { schema: EstimateAcceptanceRateOutputSchema },
+      prompt: `You are an AI assistant specialized in estimating college acceptance rates.
       
         Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
       
@@ -80,11 +105,5 @@ export async function estimateAcceptanceRate(
   input: EstimateAcceptanceRateInput,
   options?: z.infer<typeof EstimateAcceptanceRateOptionsSchema>
 ): Promise<EstimateAcceptanceRateOutput> {
-  let ai = globalAi;
-  if (options?.apiKey) {
-    ai = genkit({
-      plugins: [googleAI({ apiKey: options.apiKey })],
-    });
-  }
-  return estimateAcceptanceRateFlow(input, {params: {ai}});
+  return estimateAcceptanceRateFlow({ input, apiKey: options?.apiKey });
 }
