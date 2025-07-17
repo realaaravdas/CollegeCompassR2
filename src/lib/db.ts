@@ -3,6 +3,12 @@ import fs from 'fs/promises';
 import path from 'path';
 import type { User, UserData } from './types';
 
+interface Session {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+}
+
 // In a real app, use a proper database.
 // For this prototype, we'll use JSON files.
 const DB_DIR = path.join(process.cwd(), 'local-db');
@@ -41,6 +47,20 @@ const writeJsonFile = async <T>(filePath: string, data: T): Promise<void> => {
 const getUsers = async (): Promise<User[]> => readJsonFile(USERS_FILE, []);
 const saveUsers = (users: User[]): Promise<void> => writeJsonFile(USERS_FILE, users);
 
+// --- Session Management ---
+const getSessions = async (): Promise<Session[]> => {
+    const sessions = await readJsonFile<Session[]>(SESSIONS_FILE, []);
+    // Filter out expired sessions on read
+    const now = new Date();
+    const validSessions = sessions.filter(s => new Date(s.expiresAt) > now);
+    if (validSessions.length < sessions.length) {
+        await writeJsonFile(SESSIONS_FILE, validSessions);
+    }
+    return validSessions;
+};
+const saveAllSessions = (sessions: Session[]): Promise<void> => writeJsonFile(SESSIONS_FILE, sessions);
+
+
 export const db = {
   getUser: async (username: string): Promise<User | undefined> => {
     const users = await getUsers();
@@ -62,25 +82,36 @@ export const db = {
     await writeJsonFile(userDataPath, data);
   },
   
-  // --- Session Management (for lucia) ---
-  getSessions: async (): Promise<{ id: string, userId: string, expiresAt: Date }[]> => {
-    const sessions = await readJsonFile(SESSIONS_FILE, []);
-    // Filter out expired sessions
-    const validSessions = sessions.filter((s: { expiresAt: string | number | Date; }) => new Date(s.expiresAt) > new Date());
-    if (validSessions.length < sessions.length) {
-      await db.saveAllSessions(validSessions);
-    }
-    return validSessions.map((s: { expiresAt: string | number | Date; }) => ({ ...s, expiresAt: new Date(s.expiresAt) }));
+  // --- Session Management (for lucia adapter) ---
+  getSession: async (sessionId: string): Promise<Session | null> => {
+    const sessions = await getSessions();
+    return sessions.find(s => s.id === sessionId) ?? null;
   },
-  saveSession: async (session: { id: string, userId: string, expiresAt: Date }): Promise<void> => {
-    const sessions = await db.getSessions();
-    const existingIndex = sessions.findIndex(s => s.id === session.id);
-    if(existingIndex > -1) {
-        sessions[existingIndex] = session;
-    } else {
-        sessions.push(session);
-    }
-    await db.saveAllSessions(sessions);
+  getUserSessions: async (userId: string): Promise<Session[]> => {
+      const sessions = await getSessions();
+      return sessions.filter(s => s.userId === userId);
   },
-  saveAllSessions: (sessions: any[]): Promise<void> => writeJsonFile(SESSIONS_FILE, sessions),
+  saveSession: async (session: Session): Promise<void> => {
+    const sessions = await getSessions();
+    sessions.push(session);
+    await saveAllSessions(sessions);
+  },
+  updateSessionExpiration: async(sessionId: string, expiresAt: Date): Promise<void> => {
+    const sessions = await getSessions();
+    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex > -1) {
+        sessions[sessionIndex].expiresAt = expiresAt;
+        await saveAllSessions(sessions);
+    }
+  },
+  deleteSession: async (sessionId: string): Promise<void> => {
+      let sessions = await getSessions();
+      sessions = sessions.filter(s => s.id !== sessionId);
+      await saveAllSessions(sessions);
+  },
+  deleteUserSessions: async(userId: string): Promise<void> => {
+      let sessions = await getSessions();
+      sessions = sessions.filter(s => s.userId !== userId);
+      await saveAllSessions(sessions);
+  }
 };

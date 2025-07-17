@@ -1,39 +1,62 @@
 // src/lib/auth.ts
 import { Lucia } from 'lucia';
-import { NodeNextJsAdapter } from '@lucia-auth/adapter-nextjs/node';
 import { db } from './db';
+import type { Session, User } from 'lucia';
 
-// This is a dummy adapter that doesn't actually connect to a DB.
-// In a real app, you'd use Prisma, Drizzle, etc.
-// For this prototype, our `db.ts` handles the JSON file logic.
+// This is a custom adapter that connects Lucia to our JSON file db.
 const adapter = {
-  // We don't need these for this simple file-based auth
-  deleteSession: async () => {},
-  deleteUserSessions: async () => {},
-  getSessionAndUser: async (sessionId: string) => {
-    // A real implementation would check a session table.
-    // Here we just extract the username from the session ID.
-    // This is NOT secure, just for prototyping.
-    const sessions = await db.getSessions();
-    const session = sessions.find((s) => s.id === sessionId);
+  getSessionAndUser: async (
+    sessionId: string
+  ): Promise<[Session | null, User | null]> => {
+    const session = await db.getSession(sessionId);
     if (!session) return [null, null];
 
     const user = await db.getUser(session.userId);
     if (!user) return [null, null];
 
     return [
-      { id: session.id, userId: user.username, expiresAt: session.expiresAt, attributes: {} },
-      { id: user.username, attributes: {} },
+      {
+        id: session.id,
+        userId: user.username,
+        expiresAt: new Date(session.expiresAt),
+        attributes: {},
+      },
+      {
+        id: user.username,
+        attributes: {
+          username: user.username,
+        },
+      },
     ];
   },
-  getUserSessions: async () => [],
-  setSession: async (session: { id: string, userId: string, expiresAt: Date }) => {
-    await db.saveSession(session);
+  getUserSessions: async (userId: string) => {
+    const sessions = await db.getUserSessions(userId);
+    return sessions.map((s) => ({
+      id: s.id,
+      userId: s.userId,
+      expiresAt: new Date(s.expiresAt),
+      attributes: {},
+    }));
   },
-  updateSessionExpiration: async () => {},
+  setSession: async (session: Session) => {
+    await db.saveSession({
+      id: session.id,
+      userId: session.userId,
+      expiresAt: session.expiresAt,
+    });
+  },
+  updateSessionExpiration: async (sessionId: string, expiresAt: Date) => {
+    await db.updateSessionExpiration(sessionId, expiresAt);
+  },
+  deleteSession: async (sessionId: string) => {
+    await db.deleteSession(sessionId);
+  },
+  deleteUserSessions: async (userId: string) => {
+    await db.deleteUserSessions(userId);
+  },
 };
 
-export const lucia = new Lucia(adapter as any, {
+export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: {
       secure: process.env.NODE_ENV === 'production',
@@ -41,7 +64,7 @@ export const lucia = new Lucia(adapter as any, {
   },
   getUserAttributes: (attributes) => {
     return {
-      username: attributes.id,
+      username: attributes.username,
     };
   },
 });
@@ -50,7 +73,7 @@ declare module 'lucia' {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: {
-      id: string;
+      username: string;
     };
   }
 }
