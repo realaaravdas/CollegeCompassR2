@@ -8,9 +8,9 @@
  * - PopulateCollegeInfoOutput - The return type for the populateCollegeInfo function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai as globalAi } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { z } from 'genkit';
+import { genkit, z } from 'genkit';
 
 const PopulateCollegeInfoInputSchema = z.object({
   collegeName: z
@@ -40,41 +40,42 @@ export type PopulateCollegeInfoOutput = z.infer<
   typeof PopulateCollegeInfoOutputSchema
 >;
 
-export async function populateCollegeInfo(
-  input: PopulateCollegeInfoInput,
-  options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
-): Promise<PopulateCollegeInfoOutput> {
-  if (options?.apiKey) {
-    ai.configure({
-      plugins: [googleAI({ apiKey: options.apiKey })],
-    });
-  }
-  return populateCollegeInfoFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'populateCollegeInfoPrompt',
-  input: { schema: PopulateCollegeInfoInputSchema },
-  output: { schema: PopulateCollegeInfoOutputSchema },
-  prompt: `You are an AI assistant designed to gather information about colleges.
-
-  Based on the college name provided, you will find the deadlines, application portal URL, an image URL, list of majors, and acceptance rate.
-  Use your knowledge and web searches to find the most accurate and up-to-date information.
-
-  College Name: {{{collegeName}}}
-
-  Return the information in the JSON format specified in the output schema.
-  `,
-});
-
-const populateCollegeInfoFlow = ai.defineFlow(
+const populateCollegeInfoFlow = globalAi.defineFlow(
   {
     name: 'populateCollegeInfoFlow',
     inputSchema: PopulateCollegeInfoInputSchema,
     outputSchema: PopulateCollegeInfoOutputSchema,
   },
-  async (input) => {
+  async (input, streamingCallback, context) => {
+    const ai = context.params.ai as typeof globalAi;
+    const prompt = ai.definePrompt({
+        name: 'populateCollegeInfoPrompt',
+        input: { schema: PopulateCollegeInfoInputSchema },
+        output: { schema: PopulateCollegeInfoOutputSchema },
+        prompt: `You are an AI assistant designed to gather information about colleges.
+      
+        Based on the college name provided, you will find the deadlines, application portal URL, an image URL, list of majors, and acceptance rate.
+        Use your knowledge and web searches to find the most accurate and up-to-date information.
+      
+        College Name: {{{collegeName}}}
+      
+        Return the information in the JSON format specified in the output schema.
+        `,
+    });
     const { output } = await prompt(input);
     return output!;
   }
 );
+
+export async function populateCollegeInfo(
+    input: PopulateCollegeInfoInput,
+    options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
+  ): Promise<PopulateCollegeInfoOutput> {
+    let ai = globalAi;
+    if (options?.apiKey) {
+      ai = genkit({
+        plugins: [googleAI({ apiKey: options.apiKey })],
+      });
+    }
+    return populateCollegeInfoFlow(input, {params: {ai}});
+}

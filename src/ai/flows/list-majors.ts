@@ -7,9 +7,9 @@
  * - ListMajorsOutput - The return type for the listMajors function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai as globalAi } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { z } from 'genkit';
+import { genkit, z } from 'genkit';
 
 const ListMajorsInputSchema = z.object({
   collegeName: z
@@ -29,33 +29,35 @@ const ListMajorsOutputSchema = z.object({
 });
 export type ListMajorsOutput = z.infer<typeof ListMajorsOutputSchema>;
 
-export async function listMajors(
-  input: ListMajorsInput,
-  options?: z.infer<typeof ListMajorsOptionsSchema>
-): Promise<ListMajorsOutput> {
-  if (options?.apiKey) {
-    ai.configure({
-      plugins: [googleAI({ apiKey: options.apiKey })],
-    });
-  }
-  return listMajorsFlow(input);
-}
 
-const prompt = ai.definePrompt({
-  name: 'listMajorsPrompt',
-  input: { schema: ListMajorsInputSchema },
-  output: { schema: ListMajorsOutputSchema },
-  prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
-});
-
-const listMajorsFlow = ai.defineFlow(
+const listMajorsFlow = globalAi.defineFlow(
   {
     name: 'listMajorsFlow',
     inputSchema: ListMajorsInputSchema,
     outputSchema: ListMajorsOutputSchema,
   },
-  async (input) => {
+  async (input, streamingCallback, context) => {
+    const ai = context.params.ai as typeof globalAi;
+    const prompt = ai.definePrompt({
+        name: 'listMajorsPrompt',
+        input: { schema: ListMajorsInputSchema },
+        output: { schema: ListMajorsOutputSchema },
+        prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
+    });
     const { output } = await prompt(input);
     return output!;
   }
 );
+
+export async function listMajors(
+    input: ListMajorsInput,
+    options?: z.infer<typeof ListMajorsOptionsSchema>
+  ): Promise<ListMajorsOutput> {
+    let ai = globalAi;
+    if (options?.apiKey) {
+      ai = genkit({
+        plugins: [googleAI({ apiKey: options.apiKey })],
+      });
+    }
+    return listMajorsFlow(input, {params: {ai}});
+  }
