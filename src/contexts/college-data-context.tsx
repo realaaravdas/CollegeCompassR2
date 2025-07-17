@@ -7,7 +7,10 @@ import type { College } from '@/lib/types';
 
 import { populateCollegeInfo } from '@/ai/flows/populate-college-info';
 import { estimateAcceptanceRate as estimateAcceptanceRateFlow } from '@/ai/flows/estimate-acceptance-rate';
+import { testApiKey as testApiKeyFlow } from '@/ai/flows/test-api-key';
 import { useToast } from '@/hooks/use-toast';
+
+const API_KEY_STORAGE_KEY = 'gemini_api_key';
 
 interface CollegeDataContextType {
   colleges: College[];
@@ -17,10 +20,12 @@ interface CollegeDataContextType {
   apiKey: string;
   setApiKey: (key: string) => void;
   isAiLoading: boolean;
+  isTestingKey: boolean;
   addCollege: (collegeName: string) => Promise<College>;
   updateCollege: (collegeId: string, data: Partial<Omit<College, 'id'>>) => void;
   deleteCollege: (collegeId: string) => Promise<void>;
   estimateAcceptanceRate: (college: College) => Promise<void>;
+  testApiKey: (keyToTest: string) => Promise<{ success: boolean; message: string; }>;
 }
 
 const CollegeDataContext = createContext<CollegeDataContextType | undefined>(undefined);
@@ -29,10 +34,23 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKeyState] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isTestingKey, setIsTestingKey] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Load API key from local storage on initial load
+    const storedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    if (storedApiKey) {
+      setApiKeyState(storedApiKey);
+    }
+  }, []);
+
+  const setApiKey = (key: string) => {
+    setApiKeyState(key);
+    localStorage.setItem(API_KEY_STORAGE_KEY, key);
+  }
 
   const saveColleges = async (updatedColleges: College[]) => {
     try {
@@ -148,6 +166,15 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
     }
   }, [apiKey, updateCollege]);
 
+  const testApiKey = useCallback(async (keyToTest: string) => {
+    setIsTestingKey(true);
+    try {
+        return await testApiKeyFlow({ apiKey: keyToTest });
+    } finally {
+        setIsTestingKey(false);
+    }
+  }, []);
+
 
   const value = useMemo(
     () => ({
@@ -158,12 +185,14 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       apiKey,
       setApiKey,
       isAiLoading,
+      isTestingKey,
       addCollege,
       updateCollege,
       deleteCollege,
       estimateAcceptanceRate,
+      testApiKey,
     }),
-    [colleges, selectedCollegeId, apiKey, isAiLoading, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate]
+    [colleges, selectedCollegeId, apiKey, isAiLoading, isTestingKey, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate, testApiKey]
   );
 
   return (

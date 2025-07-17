@@ -1,6 +1,7 @@
 'use client';
 
-import { KeyRound, LogOut, Settings, User } from 'lucide-react';
+import { useState } from 'react';
+import { KeyRound, LogOut, Settings, User, CheckCircle, AlertCircle, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,10 +25,46 @@ import { AddCollegeDialog } from './add-college-dialog';
 import { useCollegeData } from '@/contexts/college-data-context';
 import { useAuth } from '@/contexts/auth-context';
 import { CompassIcon } from './icons';
+import { useToast } from '@/hooks/use-toast';
 
 export function AppHeader() {
-  const { apiKey, setApiKey } = useCollegeData();
+  const { apiKey, setApiKey, testApiKey, isTestingKey } = useCollegeData();
   const { user, logout } = useAuth();
+  const [localApiKey, setLocalApiKey] = useState(apiKey);
+  const { toast } = useToast();
+
+  const handleSaveKey = () => {
+    setApiKey(localApiKey);
+    toast({
+      title: 'API Key Saved',
+      description: 'Your Gemini API key has been saved in this browser.',
+    });
+  };
+
+  const handleTestKey = async () => {
+    const { success, message } = await testApiKey(localApiKey);
+    if (success) {
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="text-green-500" /> API Key Test
+          </div>
+        ),
+        description: message,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: (
+          <div className="flex items-center gap-2">
+            <AlertCircle /> API Key Test Failed
+          </div>
+        ),
+        description: message,
+      });
+    }
+  };
+
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -57,14 +94,20 @@ export function AppHeader() {
               <div className="grid gap-2">
                 <Label htmlFor="api-key">Gemini API Key</Label>
                 <div className="flex items-center gap-2">
-                    <KeyRound className="h-4 w-4 text-muted-foreground" />
-                    <Input
+                  <KeyRound className="h-4 w-4 text-muted-foreground" />
+                  <Input
                     id="api-key"
                     type="password"
                     placeholder="Enter your API key"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    />
+                    value={localApiKey}
+                    onChange={(e) => setLocalApiKey(e.target.value)}
+                  />
+                </div>
+                <div className='flex gap-2 justify-end'>
+                  <Button variant="outline" onClick={handleTestKey} disabled={isTestingKey || !localApiKey}>
+                    {isTestingKey ? <LoaderCircle className="animate-spin"/> : 'Test'}
+                  </Button>
+                  <Button onClick={handleSaveKey} disabled={!localApiKey}>Save</Button>
                 </div>
               </div>
             </div>
