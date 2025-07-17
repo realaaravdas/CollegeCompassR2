@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 // IMPORTANT: Replace this with your own Firebase configuration
 // from the Firebase console.
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID"
+  apiKey: "AIzaSyAYZio3LuQi0i0I0AxTfnS7BGOY4t-soVw",
+  authDomain: "college-compass-lqime.firebaseapp.com",
+  projectId: "college-compass-lqime",
+  storageBucket: "college-compass-lqime.firebasestorage.app",
+  messagingSenderId: "128485548495",
+  appId: "1:128485548495:web:efc25e68e529496c6432ba"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -17,3 +17,5 @@ const db = getFirestore(app);
 
 export { db };
 export default app;
+
+
