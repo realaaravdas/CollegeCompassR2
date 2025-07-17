@@ -29,6 +29,13 @@ const ListMajorsOutputSchema = z.object({
 });
 export type ListMajorsOutput = z.infer<typeof ListMajorsOutputSchema>;
 
+export async function listMajors(
+  input: ListMajorsInput,
+  options?: z.infer<typeof ListMajorsOptionsSchema>
+): Promise<ListMajorsOutput> {
+  return listMajorsFlow({ input, apiKey: options?.apiKey });
+}
+
 const listMajorsFlow = globalAi.defineFlow(
   {
     name: 'listMajorsFlow',
@@ -47,7 +54,7 @@ const listMajorsFlow = globalAi.defineFlow(
     }
     const prompt = ai.definePrompt({
       name: 'listMajorsPrompt_local',
-      model: googleAI.model('gemini-1.5-flash-latest'),
+      model: googleAI.model('gemini-2.0-flash-preview'),
       input: { schema: ListMajorsInputSchema },
       output: { schema: ListMajorsOutputSchema },
       prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
@@ -56,10 +63,3 @@ const listMajorsFlow = globalAi.defineFlow(
     return output!;
   }
 );
-
-export async function listMajors(
-  input: ListMajorsInput,
-  options?: z.infer<typeof ListMajorsOptionsSchema>
-): Promise<ListMajorsOutput> {
-  return listMajorsFlow({ input, apiKey: options?.apiKey });
-}

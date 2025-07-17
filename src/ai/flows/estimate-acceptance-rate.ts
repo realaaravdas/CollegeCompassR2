@@ -45,6 +45,13 @@ export type EstimateAcceptanceRateOutput = z.infer<
   typeof EstimateAcceptanceRateOutputSchema
 >;
 
+export async function estimateAcceptanceRate(
+  input: EstimateAcceptanceRateInput,
+  options?: z.infer<typeof EstimateAcceptanceRateOptionsSchema>
+): Promise<EstimateAcceptanceRateOutput> {
+  return estimateAcceptanceRateFlow({ input, apiKey: options?.apiKey });
+}
+
 const estimateAcceptanceRateFlow = globalAi.defineFlow(
   {
     name: 'estimateAcceptanceRateFlow',
@@ -64,7 +71,7 @@ const estimateAcceptanceRateFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'estimateAcceptanceRatePrompt_local',
-      model: googleAI.model('gemini-1.5-flash-latest'),
+      model: googleAI.model('gemini-2.0-flash-preview'),
       input: { schema: EstimateAcceptanceRateInputSchema },
       output: { schema: EstimateAcceptanceRateOutputSchema },
       prompt: `You are an AI assistant specialized in estimating college acceptance rates.
@@ -84,10 +91,3 @@ const estimateAcceptanceRateFlow = globalAi.defineFlow(
     return output!;
   }
 );
-
-export async function estimateAcceptanceRate(
-  input: EstimateAcceptanceRateInput,
-  options?: z.infer<typeof EstimateAcceptanceRateOptionsSchema>
-): Promise<EstimateAcceptanceRateOutput> {
-  return estimateAcceptanceRateFlow({ input, apiKey: options?.apiKey });
-}

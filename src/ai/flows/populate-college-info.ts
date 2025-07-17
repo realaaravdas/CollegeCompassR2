@@ -40,6 +40,13 @@ export type PopulateCollegeInfoOutput = z.infer<
   typeof PopulateCollegeInfoOutputSchema
 >;
 
+export async function populateCollegeInfo(
+  input: PopulateCollegeInfoInput,
+  options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
+): Promise<PopulateCollegeInfoOutput> {
+  return populateCollegeInfoFlow({ input, apiKey: options?.apiKey });
+}
+
 const populateCollegeInfoFlow = globalAi.defineFlow(
   {
     name: 'populateCollegeInfoFlow',
@@ -59,7 +66,7 @@ const populateCollegeInfoFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'populateCollegeInfoPrompt_local',
-      model: googleAI.model('gemini-1.5-flash-latest'),
+      model: googleAI.model('gemini-2.0-flash-preview'),
       input: { schema: PopulateCollegeInfoInputSchema },
       output: { schema: PopulateCollegeInfoOutputSchema },
       prompt: `You are an AI assistant designed to gather information about colleges.
@@ -76,10 +83,3 @@ const populateCollegeInfoFlow = globalAi.defineFlow(
     return output!;
   }
 );
-
-export async function populateCollegeInfo(
-  input: PopulateCollegeInfoInput,
-  options?: z.infer<typeof PopulateCollegeInfoOptionsSchema>
-): Promise<PopulateCollegeInfoOutput> {
-  return populateCollegeInfoFlow({ input, apiKey: options?.apiKey });
-}
