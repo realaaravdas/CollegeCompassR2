@@ -47,6 +47,7 @@ const listMajorsFlow = globalAi.defineFlow(
     }
     const prompt = ai.definePrompt({
       name: 'listMajorsPrompt_local',
+      model: 'googleai/gemini-pro',
       input: { schema: ListMajorsInputSchema },
       output: { schema: ListMajorsOutputSchema },
       prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,

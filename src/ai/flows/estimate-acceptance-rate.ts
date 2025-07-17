@@ -45,23 +45,6 @@ export type EstimateAcceptanceRateOutput = z.infer<
   typeof EstimateAcceptanceRateOutputSchema
 >;
 
-const estimateAcceptanceRatePrompt = globalAi.definePrompt({
-  name: 'estimateAcceptanceRatePrompt',
-  input: { schema: EstimateAcceptanceRateInputSchema },
-  output: { schema: EstimateAcceptanceRateOutputSchema },
-  prompt: `You are an AI assistant specialized in estimating college acceptance rates.
-      
-        Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
-      
-        College Name: {{{collegeName}}}
-        Major: {{{major}}}
-        GPA: {{{gpa}}}
-        Test Score: {{{testScore}}}
-      
-        Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's GPA and test scores.
-      `,
-});
-
 const estimateAcceptanceRateFlow = globalAi.defineFlow(
   {
     name: 'estimateAcceptanceRateFlow',
@@ -81,6 +64,7 @@ const estimateAcceptanceRateFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'estimateAcceptanceRatePrompt_local',
+      model: 'googleai/gemini-pro',
       input: { schema: EstimateAcceptanceRateInputSchema },
       output: { schema: EstimateAcceptanceRateOutputSchema },
       prompt: `You are an AI assistant specialized in estimating college acceptance rates.
