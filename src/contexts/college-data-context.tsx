@@ -2,13 +2,12 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { doc, setDoc, getDoc, collection, getDocs, onSnapshot, writeBatch, deleteDoc } from 'firebase/firestore';
 import { useAuth } from './auth-context';
 import type { College } from '@/lib/types';
-import { db } from '@/lib/firebase-config';
 
 import { populateCollegeInfo } from '@/ai/flows/populate-college-info';
 import { estimateAcceptanceRate as estimateAcceptanceRateFlow } from '@/ai/flows/estimate-acceptance-rate';
+import { useToast } from '@/hooks/use-toast';
 
 interface CollegeDataContextType {
   colleges: College[];
@@ -27,40 +26,64 @@ interface CollegeDataContextType {
 const CollegeDataContext = createContext<CollegeDataContextType | undefined>(undefined);
 
 export function CollegeDataProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const { toast } = useToast();
+
+
+  const saveColleges = async (updatedColleges: College[]) => {
+    try {
+        await fetch('/api/colleges', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ colleges: updatedColleges }),
+        });
+    } catch (error) {
+        console.error('Failed to save colleges:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Save Error',
+            description: 'Could not save your college list changes.',
+        });
+    }
+  };
 
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to be resolved
     if (!user) {
       setColleges([]);
       setSelectedCollegeId(null);
       return;
     }
 
-    const collRef = collection(db, 'users', user.uid, 'colleges');
-    const unsubscribe = onSnapshot(collRef, (snapshot) => {
-      const collegesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as College));
-      setColleges(collegesData);
-      
-      if (collegesData.length > 0 && !snapshot.docs.find(d => d.id === selectedCollegeId)) {
-        setSelectedCollegeId(collegesData[0].id);
-      } else if (collegesData.length === 0) {
-        setSelectedCollegeId(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [user, selectedCollegeId]);
+    const fetchColleges = async () => {
+        try {
+            const res = await fetch('/api/colleges');
+            if(res.ok) {
+                const data = await res.json();
+                setColleges(data.colleges || []);
+                 if (data.colleges.length > 0 && !selectedCollegeId) {
+                    setSelectedCollegeId(data.colleges[0].id);
+                 }
+            }
+        } catch (error) {
+            console.error('Failed to fetch colleges:', error);
+        }
+    };
+    fetchColleges();
+  }, [user, authLoading, selectedCollegeId]);
 
 
   const updateCollege = useCallback(async (collegeId: string, data: Partial<College>) => {
-    if (!user) return;
-    const docRef = doc(db, 'users', user.uid, 'colleges', collegeId);
-    await setDoc(docRef, data, { merge: true });
-  }, [user]);
+    setColleges(prev => {
+        const newColleges = prev.map(c => c.id === collegeId ? { ...c, ...data } : c);
+        saveColleges(newColleges);
+        return newColleges;
+    });
+  }, []);
 
   const addCollege = useCallback(
     async (collegeName: string): Promise<College> => {
@@ -68,7 +91,8 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       setIsAiLoading(true);
       try {
         const collegeInfo = await populateCollegeInfo({ collegeName }, { apiKey });
-        const newCollegeId = doc(collection(db, 'users', user.uid, 'colleges')).id;
+        const newCollegeId = collegeName.toLowerCase().replace(/ /g, '-') + '-' + Date.now();
+
         const newCollege: College = {
           id: newCollegeId,
           name: collegeName,
@@ -76,9 +100,12 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
           essays: [],
           numberOfEssays: 0,
         };
-
-        const docRef = doc(db, 'users', user.uid, 'colleges', newCollege.id);
-        await setDoc(docRef, newCollege);
+        
+        setColleges(prev => {
+            const newColleges = [...prev, newCollege];
+            saveColleges(newColleges);
+            return newColleges;
+        });
         
         return newCollege;
       } finally {
@@ -90,7 +117,11 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
 
   const deleteCollege = useCallback(async (collegeId: string) => {
       if (!user) return;
-      await deleteDoc(doc(db, 'users', user.uid, 'colleges', collegeId));
+      setColleges(prev => {
+        const newColleges = prev.filter(c => c.id !== collegeId);
+        saveColleges(newColleges);
+        return newColleges;
+      });
   }, [user]);
 
   const estimateAcceptanceRate = useCallback(async (college: College) => {
@@ -105,6 +136,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         gpa: college.gpa,
         testScore: college.testScore,
       }, { apiKey });
+      
       updateCollege(college.id, {
         estimatedAcceptanceRate: {
           rate: result.acceptanceRateEstimate,

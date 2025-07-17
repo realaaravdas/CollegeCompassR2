@@ -22,3 +22,12 @@ export interface College {
   essays: Essay[];
   numberOfEssays: number;
 }
+
+export interface User {
+  username: string;
+  passwordHash: string;
+}
+
+export interface UserData {
+  colleges: College[];
+}

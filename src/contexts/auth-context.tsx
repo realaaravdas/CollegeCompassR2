@@ -1,78 +1,131 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
-// Import the pre-initialized auth and db objects
-import { auth, db } from '@/lib/firebase-config';
+
+interface User {
+  username: string;
+  photoURL?: string; // Keep for avatar consistency
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
+  error: string | null;
+  login: (credentials: { username: string; password?: string }) => Promise<void>;
+  register: (credentials: { username: string; password?: string }) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const provider = new GoogleAuthProvider();
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const checkUser = async () => {
       setLoading(true);
-      if (currentUser) {
-        setUser(currentUser);
-        if (pathname === '/') {
-          router.replace('/dashboard');
+      try {
+        const res = await fetch('/api/auth/status');
+        if (res.ok) {
+          const { user: loggedInUser } = await res.json();
+          setUser(loggedInUser);
+          if (pathname === '/') {
+            router.replace('/dashboard');
+          }
+        } else {
+          setUser(null);
+          if (pathname.startsWith('/dashboard')) {
+            router.replace('/');
+          }
         }
-      } else {
+      } catch (e) {
         setUser(null);
-        if (pathname !== '/') {
-          router.replace('/');
+        if (pathname.startsWith('/dashboard')) {
+            router.replace('/');
         }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+    checkUser();
+  }, [pathname, router]);
 
-    return () => unsubscribe();
-  }, [router, pathname]);
-
-  const signInWithGoogle = async () => {
+  const login = useCallback(async (credentials: { username: string; password?: string }) => {
     setLoading(true);
+    setError(null);
     try {
-      await signInWithPopup(auth, provider);
-      // onAuthStateChanged will handle redirection
-    } catch (error) {
-      console.error("Authentication error:", error);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      setUser(data.user);
+      router.push('/dashboard');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const handleSignOut = async () => {
+  const register = useCallback(async (credentials: { username: string; password?: string }) => {
+    setLoading(true);
+    setError(null);
     try {
-      await signOut(auth);
-      // onAuthStateChanged will handle redirection
-    } catch (error) {
-      console.error("Sign out error:", error);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+      setUser(data.user);
+      router.push('/dashboard');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [router]);
+
+  const logout = useCallback(async () => {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+        console.error("Logout failed", e);
+    } finally {
+        setUser(null);
+        router.push('/');
+    }
+  }, [router]);
 
   const value = {
     user,
     loading,
-    signInWithGoogle,
-    signOut: handleSignOut,
+    error,
+    login,
+    register,
+    logout,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <div className="flex h-screen items-center justify-center">Loading...</div> : children}
+      {loading && !user && pathname.startsWith('/dashboard') ? (
+        <div className="flex h-screen items-center justify-center">Loading...</div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

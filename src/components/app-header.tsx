@@ -27,7 +27,7 @@ import { CompassIcon } from './icons';
 
 export function AppHeader() {
   const { apiKey, setApiKey } = useCollegeData();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -77,17 +77,17 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full">
                     <Avatar>
-                        <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? 'User'} />
+                        <AvatarImage src={user?.photoURL ?? ''} alt={user?.username ?? 'User'} />
                         <AvatarFallback>
-                            {user?.displayName?.[0] ?? <User />}
+                            {user?.username?.[0].toUpperCase() ?? <User />}
                         </AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user?.displayName}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.username}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                 </DropdownMenuItem>
