@@ -2,16 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
-// Directly import the config object and the initialization functions
-import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
-import firebaseConfig from '@/lib/firebase-config';
-
-// --- Firebase Initialization ---
-// This pattern ensures that we don't try to re-initialize the app on every render.
-const app = !getApps().length ? initializeApp(firebaseConfig as FirebaseOptions) : getApp();
-const auth = getAuth(app);
-// --- End Firebase Initialization ---
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
+// Import the pre-initialized auth and db objects
+import { auth, db } from '@/lib/firebase-config';
 
 interface AuthContextType {
   user: User | null;
