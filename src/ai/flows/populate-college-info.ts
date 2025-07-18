@@ -46,7 +46,7 @@ const populateCollegeInfoPrompt = ai.definePrompt({
   name: 'populateCollegeInfoPrompt',
   input: { schema: PopulateCollegeInfoInputSchema },
   output: { schema: PopulateCollegeInfoOutputSchema },
-  model: 'googleai/gemini-2.0-flash-preview',
+  model: 'googleai/gemini-2.0-flash',
   prompt: `You are an AI assistant designed to gather information about colleges.
   
     Based on the college name provided, you will find the deadlines, application portal URL, an image URL, list of majors, and acceptance rate.

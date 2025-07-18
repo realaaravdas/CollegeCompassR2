@@ -52,7 +52,7 @@ const estimateAcceptanceRatePrompt = ai.definePrompt({
   name: 'estimateAcceptanceRatePrompt',
   input: { schema: EstimateAcceptanceRateInputSchema },
   output: { schema: EstimateAcceptanceRateOutputSchema },
-  model: 'googleai/gemini-2.0-flash-preview',
+  model: 'googleai/gemini-2.0-flash',
   prompt: `You are an AI assistant specialized in estimating college acceptance rates.
   
     Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
