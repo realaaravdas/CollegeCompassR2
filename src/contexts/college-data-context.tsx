@@ -94,10 +94,15 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         const collegeInfo = await populateCollegeInfo({ collegeName });
         const newCollegeId = collegeName.toLowerCase().replace(/ /g, '-') + '-' + Date.now();
 
+        const lastSelectedCollege = colleges.find(c => c.id === selectedCollegeId);
+
         const newCollege: College = {
           id: newCollegeId,
           name: collegeName,
           ...collegeInfo,
+          gpa: lastSelectedCollege?.gpa,
+          testScore: lastSelectedCollege?.testScore,
+          testType: lastSelectedCollege?.testType || 'SAT',
           essays: [],
           numberOfEssays: 0,
         };
@@ -113,7 +118,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         setIsAiLoading(false);
       }
     },
-    [user]
+    [user, colleges, selectedCollegeId]
   );
 
   const deleteCollege = useCallback(async (collegeId: string) => {

@@ -17,6 +17,7 @@ import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { cn } from '@/lib/utils';
 
 export function CollegeDetailsView() {
   const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, generateStudentProfile, isAiLoading, isProfileLoading } = useCollegeData();
@@ -96,7 +97,23 @@ export function CollegeDetailsView() {
 
   const completedEssays = college.essays.filter(e => e.completed).length;
   const essayProgress = college.numberOfEssays > 0 ? (completedEssays / college.numberOfEssays) * 100 : 0;
+
+  const getAcceptanceRateColor = (rateStr: string | number | undefined) => {
+    if (rateStr === undefined) return '';
+    const rate = typeof rateStr === 'string' ? parseFloat(rateStr.replace('%', '')) : rateStr;
+    if (isNaN(rate)) return '';
+    if (rate > 50) return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+    if (rate > 20) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+    return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+  };
   
+  const getRateTitleColor = (rate?: number) => {
+    if (rate === undefined) return '';
+    if (rate > 50) return 'text-green-600 dark:text-green-500';
+    if (rate > 20) return 'text-yellow-600 dark:text-yellow-500';
+    return 'text-red-600 dark:text-red-500';
+  }
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-start gap-6">
@@ -117,7 +134,9 @@ export function CollegeDetailsView() {
           </Button>
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="secondary"><CalendarDays className="mr-1.5 h-3 w-3" />Deadlines: {college.deadlines}</Badge>
-            <Badge variant="secondary"><BarChart className="mr-1.5 h-3 w-3" />Acceptance: {college.acceptanceRate}</Badge>
+            <Badge variant="secondary" className={cn(getAcceptanceRateColor(college.acceptanceRate))}>
+              <BarChart className="mr-1.5 h-3 w-3" />Acceptance: {college.acceptanceRate}
+            </Badge>
           </div>
         </div>
       </div>
@@ -168,7 +187,7 @@ export function CollegeDetailsView() {
           </CardContent>
         </Card>
         
-        <Card className="flex flex-col md:col-span-2 xl:col-span-1">
+        <Card className="flex flex-col md:col-span-2 xl:col-span-1 max-h-[40rem]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap />
@@ -176,8 +195,8 @@ export function CollegeDetailsView() {
             </CardTitle>
             <CardDescription>A list of majors offered at this college.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow">
-            <ScrollArea className="h-full max-h-[30rem] xl:max-h-full">
+          <CardContent className="flex-grow overflow-hidden">
+            <ScrollArea className="h-full">
               <ul className="space-y-2 pr-4">
                 {college.majors.map((major, index) => (
                   <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">
@@ -246,10 +265,12 @@ export function CollegeDetailsView() {
                 </div>
             )}
             {college.estimatedAcceptanceRate && (
-                <Card className="bg-accent/30 mt-4">
+                <Card className={cn("mt-4", getAcceptanceRateColor(college.estimatedAcceptanceRate.rate))}>
                     <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
                         <Target className="h-6 w-6 text-primary"/>
-                        <CardTitle>Your Rate: {college.estimatedAcceptanceRate.rate}%</CardTitle>
+                        <CardTitle className={cn(getRateTitleColor(college.estimatedAcceptanceRate.rate))}>
+                            Your Rate: {college.estimatedAcceptanceRate.rate}%
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">{college.estimatedAcceptanceRate.reasoning}</p>
