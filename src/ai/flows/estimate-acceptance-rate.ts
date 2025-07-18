@@ -20,7 +20,8 @@ const EstimateAcceptanceRateInputSchema = z.object({
   gpa: z.number().describe('The GPA of the student.'),
   testScore: z
     .number()
-    .describe('The standardized test score of the student (e.g., SAT or ACT).'),
+    .describe('The standardized test score of the student.'),
+  testType: z.enum(['SAT', 'ACT']).describe('The type of test score provided (SAT or ACT).'),
 });
 export type EstimateAcceptanceRateInput = z.infer<
   typeof EstimateAcceptanceRateInputSchema
@@ -60,7 +61,7 @@ const estimateAcceptanceRatePrompt = ai.definePrompt({
     College Name: {{{collegeName}}}
     Major: {{{major}}}
     GPA: {{{gpa}}}
-    Test Score: {{{testScore}}}
+    Test Score: {{{testScore}}} ({{{testType}}})
   
     Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's GPA and test scores.
   `,

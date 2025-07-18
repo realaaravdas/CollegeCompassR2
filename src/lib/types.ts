@@ -14,6 +14,7 @@ export interface College {
   acceptanceRate: string;
   gpa?: number;
   testScore?: number;
+  testType?: 'SAT' | 'ACT';
   selectedMajor?: string;
   estimatedAcceptanceRate?: {
     rate: number;

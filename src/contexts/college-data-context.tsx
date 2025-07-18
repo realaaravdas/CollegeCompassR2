@@ -131,6 +131,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         major: college.selectedMajor,
         gpa: college.gpa,
         testScore: college.testScore,
+        testType: college.testType || 'SAT', // Pass the test type, default to SAT
       });
       
       updateCollege(college.id, {

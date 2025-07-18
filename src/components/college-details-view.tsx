@@ -16,6 +16,7 @@ import { BarChart, CalendarDays, ExternalLink, FileText, GraduationCap, LoaderCi
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function CollegeDetailsView() {
   const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, isAiLoading } = useCollegeData();
@@ -70,9 +71,6 @@ export function CollegeDetailsView() {
   const completedEssays = college.essays.filter(e => e.completed).length;
   const essayProgress = college.numberOfEssays > 0 ? (completedEssays / college.numberOfEssays) * 100 : 0;
   
-  // Create a unique list of majors for display, but keep original for dropdown
-  const uniqueMajors = [...new Set(college.majors)];
-
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-start gap-6">
@@ -152,7 +150,7 @@ export function CollegeDetailsView() {
             <CardContent>
                 <ScrollArea className="h-72">
                     <ul className="space-y-2">
-                        {uniqueMajors.map((major, index) => (
+                        {college.majors.map((major, index) => (
                             <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">{major}</li>
                         ))}
                     </ul>
@@ -173,8 +171,24 @@ export function CollegeDetailsView() {
                 <Input id="gpa" type="number" step="0.1" placeholder="e.g., 3.8" value={college.gpa || ''} onChange={(e) => updateCollege(college.id, { gpa: parseFloat(e.target.value) })} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="test-score">SAT/ACT Score</Label>
-                <Input id="test-score" type="number" placeholder="e.g., 1500" value={college.testScore || ''} onChange={(e) => updateCollege(college.id, { testScore: parseInt(e.target.value) })} />
+                <Label>SAT/ACT Score</Label>
+                <div className="flex gap-2">
+                    <Input id="test-score" type="number" placeholder="e.g., 1500" value={college.testScore || ''} onChange={(e) => updateCollege(college.id, { testScore: parseInt(e.target.value) })} />
+                    <RadioGroup 
+                        defaultValue={college.testType || 'SAT'} 
+                        onValueChange={(value: 'SAT' | 'ACT') => updateCollege(college.id, { testType: value })} 
+                        className="flex items-center"
+                    >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="SAT" id="r1" />
+                            <Label htmlFor="r1">SAT</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ACT" id="r2" />
+                            <Label htmlFor="r2">ACT</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="major">Intended Major</Label>
