@@ -28,7 +28,6 @@ const PopulateCollegeInfoOutputSchema = z.object({
   applicationPortal: z
     .string()
     .describe('The URL of the college application portal.'),
-  imageUrl: z.string().describe('The URL of an image representing the college.'),
   majors: z.array(z.string()).describe('A list of majors offered by the college.'),
   acceptanceRate: z.string().describe('Acceptance rate for the college.'),
 });
@@ -49,12 +48,12 @@ const populateCollegeInfoPrompt = ai.definePrompt({
   model: 'googleai/gemini-2.0-flash',
   prompt: `You are an AI assistant designed to gather information about colleges.
   
-    Based on the college name provided, you will find the deadlines, application portal URL, an image URL, list of majors, and acceptance rate.
+    Based on the college name provided, you will find the deadlines, application portal URL, list of majors, and acceptance rate.
     Use your knowledge and web searches to find the most accurate and up-to-date information.
   
     College Name: {{{collegeName}}}
   
-    Return the information in the JSON format specified in the output schema.
+    Return the information in the JSON format specified in the output schema. Do not include an image URL.
     `,
 });
 

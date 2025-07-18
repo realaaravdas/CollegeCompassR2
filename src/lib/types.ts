@@ -7,7 +7,6 @@ export interface Essay {
 export interface College {
   id: string;
   name: string;
-  imageUrl: string;
   deadlines: string;
   applicationPortal: string;
   majors: string[];

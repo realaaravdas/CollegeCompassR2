@@ -22,8 +22,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useCollegeData } from '@/contexts/college-data-context';
-import { GraduationCap, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { College } from '@/lib/types';
+import { Avatar, AvatarFallback } from './ui/avatar';
+
+
+function getCollegeInitials(name: string) {
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return words
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 
 export function CollegeSidebar() {
   const { colleges, selectedCollegeId, setSelectedCollegeId, deleteCollege } = useCollegeData();
@@ -56,7 +70,11 @@ export function CollegeSidebar() {
                   isActive={selectedCollegeId === college.id}
                   tooltip={college.name}
                 >
-                  <GraduationCap />
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-xs">
+                      {getCollegeInitials(college.name)}
+                    </AvatarFallback>
+                  </Avatar>
                   <span>{college.name}</span>
                 </SidebarMenuButton>
                 <SidebarMenuAction

@@ -18,6 +18,19 @@ import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from './ui/avatar';
+
+function getCollegeInitials(name: string) {
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return words
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 
 export function CollegeDetailsView() {
   const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, generateStudentProfile, isAiLoading, isProfileLoading } = useCollegeData();
@@ -117,14 +130,11 @@ export function CollegeDetailsView() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-start gap-6">
-        <Image
-          src={college.imageUrl || 'https://placehold.co/128x128.png'}
-          alt={college.name}
-          width={128}
-          height={128}
-          className="rounded-lg border object-cover h-32 w-32"
-          data-ai-hint="university building"
-        />
+        <Avatar className="h-32 w-32 rounded-lg border">
+          <AvatarFallback className="text-4xl rounded-lg">
+            {getCollegeInitials(college.name)}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1">
           <h2 className="text-3xl font-bold font-headline">{college.name}</h2>
           <Button variant="link" asChild className="px-0 h-auto">
