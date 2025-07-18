@@ -42,7 +42,7 @@ export function AppHeader() {
   };
 
   const handleTestKey = async () => {
-    const { success, message } = await testApiKey(localApiKey);
+    const { success, message } = await testApiKey(apiKey); // Use the saved key from context
     if (success) {
       toast({
         title: (
@@ -104,7 +104,7 @@ export function AppHeader() {
                   />
                 </div>
                 <div className='flex gap-2 justify-end'>
-                  <Button variant="outline" onClick={handleTestKey} disabled={isTestingKey || !localApiKey}>
+                  <Button variant="outline" onClick={handleTestKey} disabled={isTestingKey || !apiKey}>
                     {isTestingKey ? <LoaderCircle className="animate-spin"/> : 'Test'}
                   </Button>
                   <Button onClick={handleSaveKey} disabled={!localApiKey}>Save</Button>
