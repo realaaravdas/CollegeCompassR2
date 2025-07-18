@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { KeyRound, LogOut, Settings, User, CheckCircle, AlertCircle, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,12 @@ export function AppHeader() {
   const { user, logout } = useAuth();
   const [localApiKey, setLocalApiKey] = useState(apiKey);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Sync local state when context state changes
+    setLocalApiKey(apiKey);
+  }, [apiKey]);
+
 
   const handleSaveKey = () => {
     setApiKey(localApiKey);
