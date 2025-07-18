@@ -8,9 +8,8 @@
  * - ListMajorsOutput - The return type for the listMajors function.
  */
 
-import { ai as globalAi } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit, z } from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ListMajorsInputSchema = z.object({
   collegeName: z
@@ -18,10 +17,6 @@ const ListMajorsInputSchema = z.object({
     .describe('The name of the college to list majors for.'),
 });
 export type ListMajorsInput = z.infer<typeof ListMajorsInputSchema>;
-
-const ListMajorsOptionsSchema = z.object({
-  apiKey: z.string().optional(),
-});
 
 const ListMajorsOutputSchema = z.object({
   majors: z
@@ -32,38 +27,28 @@ export type ListMajorsOutput = z.infer<typeof ListMajorsOutputSchema>;
 
 export async function listMajors(
   input: ListMajorsInput,
-  options?: z.infer<typeof ListMajorsOptionsSchema>
 ): Promise<ListMajorsOutput> {
-  return listMajorsFlow({ input, apiKey: options?.apiKey });
+  return listMajorsFlow(input);
 }
 
-const listMajorsFlow = globalAi.defineFlow(
+const listMajorsPrompt = ai.definePrompt({
+  name: 'listMajorsPrompt',
+  input: { schema: ListMajorsInputSchema },
+  output: { schema: ListMajorsOutputSchema },
+  prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
+});
+
+const listMajorsFlow = ai.defineFlow(
   {
     name: 'listMajorsFlow',
-    inputSchema: z.object({
-      input: ListMajorsInputSchema,
-      apiKey: z.string().optional(),
-    }),
+    inputSchema: ListMajorsInputSchema,
     outputSchema: ListMajorsOutputSchema,
   },
-  async ({ input, apiKey }) => {
-    const key = apiKey || process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error(
-        'Please pass in the API key or set the GEMINI_API_KEY environment variable.'
-      );
+  async (input) => {
+     if (!process.env.GEMINI_API_KEY) {
+      throw new Error('The GEMINI_API_KEY environment variable is not set.');
     }
-    const ai = genkit({
-      plugins: [googleAI({ apiKey: key })],
-    });
-
-    const prompt = ai.definePrompt({
-      name: 'listMajorsPrompt_local',
-      input: { schema: ListMajorsInputSchema },
-      output: { schema: ListMajorsOutputSchema },
-      prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
-    });
-    const { output } = await prompt(input);
+    const { output } = await listMajorsPrompt(input);
     return output!;
   }
 );

@@ -7,25 +7,18 @@ import type { College } from '@/lib/types';
 
 import { populateCollegeInfo } from '@/ai/flows/populate-college-info';
 import { estimateAcceptanceRate as estimateAcceptanceRateFlow } from '@/ai/flows/estimate-acceptance-rate';
-import { testApiKey as testApiKeyFlow } from '@/ai/flows/test-api-key';
 import { useToast } from '@/hooks/use-toast';
-
-const API_KEY_STORAGE_KEY = 'gemini_api_key';
 
 interface CollegeDataContextType {
   colleges: College[];
   setColleges: React.Dispatch<React.SetStateAction<College[]>>;
   selectedCollegeId: string | null;
   setSelectedCollegeId: (id: string | null) => void;
-  apiKey: string;
-  setApiKey: (key: string) => void;
   isAiLoading: boolean;
-  isTestingKey: boolean;
   addCollege: (collegeName: string) => Promise<College>;
   updateCollege: (collegeId: string, data: Partial<Omit<College, 'id'>>) => void;
   deleteCollege: (collegeId: string) => Promise<void>;
   estimateAcceptanceRate: (college: College) => Promise<void>;
-  testApiKey: (keyToTest: string) => Promise<{ success: boolean; message: string; }>;
 }
 
 const CollegeDataContext = createContext<CollegeDataContextType | undefined>(undefined);
@@ -34,23 +27,8 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
-  const [apiKey, setApiKeyState] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isTestingKey, setIsTestingKey] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Load API key from local storage on initial load
-    const storedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (storedApiKey) {
-      setApiKeyState(storedApiKey);
-    }
-  }, []);
-
-  const setApiKey = (key: string) => {
-    setApiKeyState(key);
-    localStorage.setItem(API_KEY_STORAGE_KEY, key);
-  }
 
   const saveColleges = async (updatedColleges: College[]) => {
     try {
@@ -108,7 +86,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       if (!user) throw new Error("User not authenticated");
       setIsAiLoading(true);
       try {
-        const collegeInfo = await populateCollegeInfo({ collegeName }, { apiKey });
+        const collegeInfo = await populateCollegeInfo({ collegeName });
         const newCollegeId = collegeName.toLowerCase().replace(/ /g, '-') + '-' + Date.now();
 
         const newCollege: College = {
@@ -130,7 +108,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         setIsAiLoading(false);
       }
     },
-    [user, apiKey]
+    [user]
   );
 
   const deleteCollege = useCallback(async (collegeId: string) => {
@@ -153,7 +131,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         major: college.selectedMajor,
         gpa: college.gpa,
         testScore: college.testScore,
-      }, { apiKey });
+      });
       
       updateCollege(college.id, {
         estimatedAcceptanceRate: {
@@ -164,16 +142,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsAiLoading(false);
     }
-  }, [apiKey, updateCollege]);
-
-  const testApiKey = useCallback(async (keyToTest: string) => {
-    setIsTestingKey(true);
-    try {
-        return await testApiKeyFlow({ apiKey: keyToTest });
-    } finally {
-        setIsTestingKey(false);
-    }
-  }, []);
+  }, [updateCollege]);
 
 
   const value = useMemo(
@@ -182,17 +151,13 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       setColleges,
       selectedCollegeId,
       setSelectedCollegeId,
-      apiKey,
-      setApiKey,
       isAiLoading,
-      isTestingKey,
       addCollege,
       updateCollege,
       deleteCollege,
       estimateAcceptanceRate,
-      testApiKey,
     }),
-    [colleges, selectedCollegeId, apiKey, isAiLoading, isTestingKey, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate, testApiKey]
+    [colleges, selectedCollegeId, isAiLoading, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate]
   );
 
   return (
