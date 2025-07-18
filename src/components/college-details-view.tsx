@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -11,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, CalendarDays, ExternalLink, FileText, LoaderCircle, Percent, Sparkles, Target } from 'lucide-react';
+import { BarChart, CalendarDays, ExternalLink, FileText, GraduationCap, LoaderCircle, Sparkles, Target } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
+import { ScrollArea } from './ui/scroll-area';
 
 export function CollegeDetailsView() {
   const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, isAiLoading } = useCollegeData();
@@ -67,6 +69,9 @@ export function CollegeDetailsView() {
 
   const completedEssays = college.essays.filter(e => e.completed).length;
   const essayProgress = college.numberOfEssays > 0 ? (completedEssays / college.numberOfEssays) * 100 : 0;
+  
+  // Create a unique list of majors for display, but keep original for dropdown
+  const uniqueMajors = [...new Set(college.majors)];
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
@@ -95,64 +100,6 @@ export function CollegeDetailsView() {
       <Separator />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/>AI Acceptance Rate Estimator</CardTitle>
-            <CardDescription>
-              Input your scores to get an AI-powered admission chance estimate for your chosen major.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="gpa">Your GPA</Label>
-                <Input id="gpa" type="number" step="0.1" placeholder="e.g., 3.8" value={college.gpa || ''} onChange={(e) => updateCollege(college.id, { gpa: parseFloat(e.target.value) })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="test-score">SAT/ACT Score</Label>
-                <Input id="test-score" type="number" placeholder="e.g., 1500" value={college.testScore || ''} onChange={(e) => updateCollege(college.id, { testScore: parseInt(e.target.value) })} />
-              </div>
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="major">Intended Major</Label>
-                <Select value={college.selectedMajor} onValueChange={(value) => updateCollege(college.id, { selectedMajor: value })}>
-                    <SelectTrigger id="major">
-                        <SelectValue placeholder="Select a major" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {college.majors.map((major) => (
-                            <SelectItem key={major} value={major}>{major}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-            <Button onClick={handleEstimateClick} disabled={isAiLoading}>
-                {isAiLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Estimate My Chances
-            </Button>
-            {isAiLoading && college.estimatedAcceptanceRate === undefined && (
-                <div className="space-y-4 pt-4">
-                    <div className="flex items-center justify-center">
-                        <Skeleton className="h-20 w-20 rounded-full" />
-                    </div>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/5" />
-                </div>
-            )}
-            {college.estimatedAcceptanceRate && (
-                <Card className="bg-accent/30 mt-4">
-                    <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
-                        <Target className="h-6 w-6 text-primary"/>
-                        <CardTitle>Your Estimated Rate: {college.estimatedAcceptanceRate.rate}%</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">{college.estimatedAcceptanceRate.reasoning}</p>
-                    </CardContent>
-                </Card>
-            )}
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileText />Essay Tracker</CardTitle>
@@ -196,7 +143,79 @@ export function CollegeDetailsView() {
             )}
           </CardContent>
         </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><GraduationCap />Offered Majors</CardTitle>
+                <CardDescription>A list of majors offered at this college.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-72">
+                    <ul className="space-y-2">
+                        {uniqueMajors.map((major, index) => (
+                            <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">{major}</li>
+                        ))}
+                    </ul>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/>AI Estimator</CardTitle>
+            <CardDescription>
+              Get an AI-powered admission chance estimate.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="gpa">Your GPA</Label>
+                <Input id="gpa" type="number" step="0.1" placeholder="e.g., 3.8" value={college.gpa || ''} onChange={(e) => updateCollege(college.id, { gpa: parseFloat(e.target.value) })} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="test-score">SAT/ACT Score</Label>
+                <Input id="test-score" type="number" placeholder="e.g., 1500" value={college.testScore || ''} onChange={(e) => updateCollege(college.id, { testScore: parseInt(e.target.value) })} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="major">Intended Major</Label>
+                <Select value={college.selectedMajor} onValueChange={(value) => updateCollege(college.id, { selectedMajor: value })}>
+                    <SelectTrigger id="major">
+                        <SelectValue placeholder="Select a major" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {college.majors.map((major, index) => (
+                            <SelectItem key={`${major}-${index}`} value={major}>{major}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button onClick={handleEstimateClick} disabled={isAiLoading} className="w-full">
+                {isAiLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Estimate My Chances
+            </Button>
+            {isAiLoading && college.estimatedAcceptanceRate === undefined && (
+                <div className="space-y-4 pt-4">
+                    <Skeleton className="h-4 w-3/4 mx-auto" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                </div>
+            )}
+            {college.estimatedAcceptanceRate && (
+                <Card className="bg-accent/30 mt-4">
+                    <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+                        <Target className="h-6 w-6 text-primary"/>
+                        <CardTitle>Your Rate: {college.estimatedAcceptanceRate.rate}%</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">{college.estimatedAcceptanceRate.reasoning}</p>
+                    </CardContent>
+                </Card>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
+ 
