@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -112,13 +113,28 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteCollege = useCallback(async (collegeId: string) => {
-      if (!user) return;
-      setColleges(prev => {
-        const newColleges = prev.filter(c => c.id !== collegeId);
-        saveColleges(newColleges);
-        return newColleges;
-      });
-  }, [user]);
+    if (!user) return;
+  
+    setColleges(prev => {
+      const newColleges = prev.filter(c => c.id !== collegeId);
+      saveColleges(newColleges);
+  
+      // If the deleted college was the selected one, select a new one.
+      if (selectedCollegeId === collegeId) {
+        if (newColleges.length > 0) {
+          setSelectedCollegeId(newColleges[0].id);
+        } else {
+          setSelectedCollegeId(null);
+        }
+      }
+      return newColleges;
+    });
+  
+    toast({
+      title: 'College Deleted',
+      description: 'The college has been removed from your list.',
+    });
+  }, [user, selectedCollegeId, toast]);
 
   const estimateAcceptanceRate = useCallback(async (college: College) => {
     if (!college.gpa || !college.testScore || !college.selectedMajor) {
