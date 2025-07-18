@@ -20,6 +20,12 @@ export interface College {
     rate: number;
     reasoning: string;
   };
+  studentProfile?: {
+    gpa: number;
+    activities: string;
+    actScore: number;
+    satScore: number;
+  };
   essays: Essay[];
   numberOfEssays: number;
 }

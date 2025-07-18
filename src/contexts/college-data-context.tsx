@@ -8,6 +8,7 @@ import type { College } from '@/lib/types';
 
 import { populateCollegeInfo } from '@/ai/flows/populate-college-info';
 import { estimateAcceptanceRate as estimateAcceptanceRateFlow } from '@/ai/flows/estimate-acceptance-rate';
+import { generateStudentProfile as generateStudentProfileFlow } from '@/ai/flows/generate-student-profile';
 import { useToast } from '@/hooks/use-toast';
 
 interface CollegeDataContextType {
@@ -16,10 +17,12 @@ interface CollegeDataContextType {
   selectedCollegeId: string | null;
   setSelectedCollegeId: (id: string | null) => void;
   isAiLoading: boolean;
+  isProfileLoading: boolean;
   addCollege: (collegeName: string) => Promise<College>;
   updateCollege: (collegeId: string, data: Partial<Omit<College, 'id'>>) => void;
   deleteCollege: (collegeId: string) => Promise<void>;
   estimateAcceptanceRate: (college: College) => Promise<void>;
+  generateStudentProfile: (college: College) => Promise<void>;
 }
 
 const CollegeDataContext = createContext<CollegeDataContextType | undefined>(undefined);
@@ -29,6 +32,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const { toast } = useToast();
 
   const saveColleges = async (updatedColleges: College[]) => {
@@ -161,6 +165,22 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
     }
   }, [updateCollege]);
 
+  const generateStudentProfile = useCallback(async (college: College) => {
+    if (!college.selectedMajor) {
+        throw new Error('A major must be selected.');
+    }
+    setIsProfileLoading(true);
+    try {
+        const result = await generateStudentProfileFlow({
+            collegeName: college.name,
+            major: college.selectedMajor,
+        });
+        updateCollege(college.id, { studentProfile: result });
+    } finally {
+        setIsProfileLoading(false);
+    }
+  }, [updateCollege]);
+
 
   const value = useMemo(
     () => ({
@@ -169,12 +189,14 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
       selectedCollegeId,
       setSelectedCollegeId,
       isAiLoading,
+      isProfileLoading,
       addCollege,
       updateCollege,
       deleteCollege,
       estimateAcceptanceRate,
+      generateStudentProfile,
     }),
-    [colleges, selectedCollegeId, isAiLoading, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate]
+    [colleges, selectedCollegeId, isAiLoading, isProfileLoading, addCollege, updateCollege, deleteCollege, estimateAcceptanceRate, generateStudentProfile]
   );
 
   return (

@@ -12,14 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, CalendarDays, ExternalLink, FileText, GraduationCap, LoaderCircle, Sparkles, Target } from 'lucide-react';
+import { BarChart, CalendarDays, ExternalLink, FileText, GraduationCap, LoaderCircle, Sparkles, Target, UserCheck } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function CollegeDetailsView() {
-  const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, isAiLoading } = useCollegeData();
+  const { colleges, selectedCollegeId, updateCollege, estimateAcceptanceRate, generateStudentProfile, isAiLoading, isProfileLoading } = useCollegeData();
   const { toast } = useToast();
 
   const college = colleges.find((c) => c.id === selectedCollegeId);
@@ -68,6 +68,32 @@ export function CollegeDetailsView() {
     }
   };
 
+  const handleGenerateProfileClick = async () => {
+    if (!college.selectedMajor) {
+        toast({
+            variant: 'destructive',
+            title: 'Missing Information',
+            description: 'Please select a major to generate a target profile.',
+        });
+        return;
+    }
+    try {
+        await generateStudentProfile(college);
+        toast({
+            title: 'Profile Generated!',
+            description: 'AI has generated a target student profile.',
+        });
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: 'destructive',
+            title: 'Generation Failed',
+            description: 'Could not generate the student profile. Please try again.',
+        });
+    }
+  };
+
+
   const completedEssays = college.essays.filter(e => e.completed).length;
   const essayProgress = college.numberOfEssays > 0 ? (completedEssays / college.numberOfEssays) * 100 : 0;
   
@@ -97,8 +123,8 @@ export function CollegeDetailsView() {
       </div>
       <Separator />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <Card className="md:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileText />Essay Tracker</CardTitle>
             <CardDescription>Keep track of your writing progress.</CardDescription>
@@ -142,7 +168,7 @@ export function CollegeDetailsView() {
           </CardContent>
         </Card>
         
-        <Card className="flex flex-col">
+        <Card className="flex flex-col md:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap />
@@ -151,7 +177,7 @@ export function CollegeDetailsView() {
             <CardDescription>A list of majors offered at this college.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow">
-            <ScrollArea className="h-full max-h-96">
+            <ScrollArea className="h-full max-h-[30rem] xl:max-h-full">
               <ul className="space-y-2 pr-4">
                 {college.majors.map((major, index) => (
                   <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">
@@ -163,7 +189,7 @@ export function CollegeDetailsView() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/>AI Estimator</CardTitle>
             <CardDescription>
@@ -233,8 +259,54 @@ export function CollegeDetailsView() {
           </CardContent>
         </Card>
 
+        <Card className="md:col-span-1">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><UserCheck className="text-primary"/>Target Profile (50% Chance)</CardTitle>
+                <CardDescription>
+                    See what an average accepted student looks like for your selected major.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Button onClick={handleGenerateProfileClick} disabled={isProfileLoading || !college.selectedMajor} className="w-full">
+                    {isProfileLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Target Profile
+                </Button>
+                {isProfileLoading && !college.studentProfile && (
+                     <div className="space-y-4 pt-4">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </div>
+                )}
+                {college.studentProfile && (
+                    <div className="space-y-3 pt-4 text-sm">
+                        <div className="flex justify-between">
+                            <span className="font-semibold text-muted-foreground">GPA:</span>
+                            <span className="font-bold">{college.studentProfile.gpa.toFixed(2)}</span>
+                        </div>
+                        <Separator />
+                         <div className="space-y-1">
+                            <span className="font-semibold text-muted-foreground">Activities:</span>
+                            <p className="font-medium text-foreground">{college.studentProfile.activities}</p>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                            <span className="font-semibold text-muted-foreground">SAT Score:</span>
+                            <span className="font-bold">{college.studentProfile.satScore}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                            <span className="font-semibold text-muted-foreground">ACT Score:</span>
+                            <span className="font-bold">{college.studentProfile.actScore}</span>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+
+
       </div>
     </div>
   );
 }
- 
