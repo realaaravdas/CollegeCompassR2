@@ -142,20 +142,25 @@ export function CollegeDetailsView() {
           </CardContent>
         </Card>
         
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><GraduationCap />Offered Majors</CardTitle>
-                <CardDescription>A list of majors offered at this college.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ScrollArea className="h-72">
-                    <ul className="space-y-2">
-                        {college.majors.map((major, index) => (
-                            <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">{major}</li>
-                        ))}
-                    </ul>
-                </ScrollArea>
-            </CardContent>
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap />
+              Offered Majors
+            </CardTitle>
+            <CardDescription>A list of majors offered at this college.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <ScrollArea className="h-full max-h-96">
+              <ul className="space-y-2 pr-4">
+                {college.majors.map((major, index) => (
+                  <li key={`${major}-${index}`} className="text-sm p-2 rounded-md bg-accent/20">
+                    {major}
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </CardContent>
         </Card>
 
         <Card>
