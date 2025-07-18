@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
 
 const ListMajorsInputSchema = z.object({
   collegeName: z
@@ -36,7 +35,7 @@ const listMajorsPrompt = ai.definePrompt({
   name: 'listMajorsPrompt',
   input: { schema: ListMajorsInputSchema },
   output: { schema: ListMajorsOutputSchema },
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash-preview',
   prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
 });
 
