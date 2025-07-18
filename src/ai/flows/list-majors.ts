@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent that lists the majors offered at a given college.
@@ -58,7 +59,6 @@ const listMajorsFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'listMajorsPrompt_local',
-      model: googleAI.model('gemini-2.0-flash-preview'),
       input: { schema: ListMajorsInputSchema },
       output: { schema: ListMajorsOutputSchema },
       prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,

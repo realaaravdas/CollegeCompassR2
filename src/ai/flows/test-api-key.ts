@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -58,7 +59,6 @@ const testApiKeyFlow = globalAi.defineFlow(
 
     const prompt = ai.definePrompt({
       name: 'testApiKeyPrompt_local',
-      model: googleAI.model('gemini-2.0-flash-preview'),
       output: { schema: z.object({ response: z.string() }) },
       prompt: `Respond with only the text "Test successful."`,
     });
