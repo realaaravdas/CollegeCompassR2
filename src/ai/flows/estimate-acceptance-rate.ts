@@ -63,12 +63,15 @@ const estimateAcceptanceRateFlow = globalAi.defineFlow(
   },
   async ({ input, apiKey }) => {
     const key = apiKey || process.env.GEMINI_API_KEY;
-    let ai = globalAi;
-    if (key) {
-      ai = genkit({
-        plugins: [googleAI({ apiKey: key })],
-      });
+    if (!key) {
+      throw new Error(
+        'Please pass in the API key or set the GEMINI_API_KEY environment variable.'
+      );
     }
+
+    const ai = genkit({
+      plugins: [googleAI({ apiKey: key })],
+    });
 
     const prompt = ai.definePrompt({
       name: 'estimateAcceptanceRatePrompt_local',

@@ -19,18 +19,20 @@ export async function testApiKey(
 ): Promise<{ success: boolean; message: string }> {
   try {
     const output = await testApiKeyFlow({ apiKey: options?.apiKey });
-    if (output.response.includes('Test successful')) {
+    if (output?.response.includes('Test successful')) {
       return { success: true, message: 'API Key is valid!' };
     }
     return { success: false, message: 'API Key is likely invalid.' };
   } catch (e: any) {
     console.error(e);
-    // Check for common error messages
     if (e.message.includes('API key not valid')) {
       return { success: false, message: 'Authentication failed: The API key is not valid.' };
     }
     if (e.message.includes('permission_denied')) {
         return { success: false, message: 'Permission denied. Please check your API key permissions.' };
+    }
+    if (e.message.includes('Please pass in the API key')) {
+        return { success: false, message: 'API key is missing. Please provide a key.' };
     }
     return { success: false, message: 'An unknown error occurred during the test.' };
   }
@@ -45,10 +47,12 @@ const testApiKeyFlow = globalAi.defineFlow(
   async ({ apiKey }) => {
     const key = apiKey || process.env.GEMINI_API_KEY;
     if (!key) {
-        throw new Error('API key must be provided either in the input or as an environment variable.');
+      throw new Error(
+        'Please pass in the API key or set the GEMINI_API_KEY environment variable.'
+      );
     }
 
-    let ai = genkit({
+    const ai = genkit({
       plugins: [googleAI({ apiKey: key })],
     });
 
