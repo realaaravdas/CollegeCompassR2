@@ -12,6 +12,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 const EstimateAcceptanceRateInputSchema = z.object({
   collegeName: z.string().describe('The name of the college.'),
@@ -51,6 +52,7 @@ const estimateAcceptanceRatePrompt = ai.definePrompt({
   name: 'estimateAcceptanceRatePrompt',
   input: { schema: EstimateAcceptanceRateInputSchema },
   output: { schema: EstimateAcceptanceRateOutputSchema },
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an AI assistant specialized in estimating college acceptance rates.
   
     Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
