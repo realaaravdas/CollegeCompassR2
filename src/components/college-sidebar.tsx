@@ -25,6 +25,7 @@ import { useCollegeData } from '@/contexts/college-data-context';
 import { Trash2 } from 'lucide-react';
 import type { College } from '@/lib/types';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { cn } from '@/lib/utils';
 
 
 function getCollegeInitials(name: string) {
@@ -37,6 +38,13 @@ function getCollegeInitials(name: string) {
   }
   return name.substring(0, 2).toUpperCase();
 }
+
+const getRateColorClass = (rate?: number) => {
+    if (rate === undefined) return '';
+    if (rate > 50) return 'border-l-green-500';
+    if (rate > 20) return 'border-l-yellow-500';
+    return 'border-l-red-500';
+};
 
 
 export function CollegeSidebar() {
@@ -69,6 +77,10 @@ export function CollegeSidebar() {
                   onClick={() => setSelectedCollegeId(college.id)}
                   isActive={selectedCollegeId === college.id}
                   tooltip={college.name}
+                  className={cn(
+                    "border-l-4 border-transparent",
+                    getRateColorClass(college.estimatedAcceptanceRate?.rate)
+                  )}
                 >
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="text-xs">
