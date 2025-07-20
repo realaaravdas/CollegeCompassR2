@@ -21,6 +21,7 @@ const EstimateAcceptanceRateInputSchema = z.object({
     .number()
     .describe('The standardized test score of the student.'),
   testType: z.enum(['SAT', 'ACT']).describe('The type of test score provided (SAT or ACT).'),
+  residency: z.enum(['In-State', 'Out-of-State', 'International']).describe('The residency status of the student.'),
 });
 export type EstimateAcceptanceRateInput = z.infer<
   typeof EstimateAcceptanceRateInputSchema
@@ -61,8 +62,9 @@ const estimateAcceptanceRatePrompt = ai.definePrompt({
     Major: {{{major}}}
     GPA: {{{gpa}}}
     Test Score: {{{testScore}}} ({{{testType}}})
+    Residency: {{{residency}}}
   
-    Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's GPA and test scores.
+    Consider factors such as the college's overall acceptance rate, the competitiveness of the major, and the student's academic profile. Importantly, factor in how the student's residency status might affect their chances, especially for public universities.
   `,
 });
 

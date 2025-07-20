@@ -4,6 +4,8 @@ export interface Essay {
   completed: boolean;
 }
 
+export type Residency = 'In-State' | 'Out-of-State' | 'International';
+
 export interface College {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface College {
   gpa?: number;
   testScore?: number;
   testType?: 'SAT' | 'ACT';
+  residency?: Residency;
   selectedMajor?: string;
   estimatedAcceptanceRate?: {
     rate: number;

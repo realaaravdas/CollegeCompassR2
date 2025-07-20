@@ -16,6 +16,7 @@ import { z } from 'genkit';
 const GenerateStudentProfileInputSchema = z.object({
   collegeName: z.string().describe('The name of the college.'),
   major: z.string().describe('The major the student is applying for.'),
+  residency: z.enum(['In-State', 'Out-of-State', 'International']).describe('The residency status of the hypothetical student.'),
 });
 export type GenerateStudentProfileInput = z.infer<
   typeof GenerateStudentProfileInputSchema
@@ -48,12 +49,13 @@ const generateStudentProfilePrompt = ai.definePrompt({
   model: 'googleai/gemini-2.0-flash',
   prompt: `You are an AI assistant specialized in college admissions.
   
-    Based on the provided college and major, create a profile for a hypothetical student who would have a 50% chance of being accepted.
+    Based on the provided college, major, and residency status, create a profile for a hypothetical student who would have a 50% chance of being accepted.
     
     Provide a realistic GPA, a single sentence describing their extracurricular activities (e.g., "Student is heavily invested in robotics and football, spending 35 hours a week in total in both"), an ACT score, and an SAT score for this student.
 
     College Name: {{{collegeName}}}
     Major: {{{major}}}
+    Residency: {{{residency}}}
   
     Return the information in the JSON format specified in the output schema.
   `,

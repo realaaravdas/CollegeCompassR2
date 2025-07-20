@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, CalendarDays, ExternalLink, FileText, GraduationCap, LoaderCircle, Sparkles, Target, UserCheck } from 'lucide-react';
+import { BarChart, CalendarDays, ExternalLink, FileText, Globe, GraduationCap, Home, LoaderCircle, Sparkles, Target, UserCheck } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import type { Residency } from '@/lib/types';
 
 function getCollegeInitials(name: string) {
   const words = name.split(' ');
@@ -58,11 +59,11 @@ export function CollegeDetailsView() {
   };
 
   const handleEstimateClick = async () => {
-    if (!college.gpa || !college.testScore || !college.selectedMajor) {
+    if (!college.gpa || !college.testScore || !college.selectedMajor || !college.residency) {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
-        description: 'Please provide your GPA, a test score, and select a major to estimate your chances.',
+        description: 'Please provide your GPA, a test score, residency, and select a major to estimate your chances.',
       });
       return;
     }
@@ -83,11 +84,11 @@ export function CollegeDetailsView() {
   };
 
   const handleGenerateProfileClick = async () => {
-    if (!college.selectedMajor) {
+    if (!college.selectedMajor || !college.residency) {
         toast({
             variant: 'destructive',
             title: 'Missing Information',
-            description: 'Please select a major to generate a target profile.',
+            description: 'Please select a major and residency to generate a target profile.',
         });
         return;
     }
@@ -250,6 +251,36 @@ export function CollegeDetailsView() {
                     </RadioGroup>
                 </div>
             </div>
+             <div className="space-y-2">
+              <Label>Residency</Label>
+              <RadioGroup
+                value={college.residency || 'Out-of-State'}
+                onValueChange={(value: Residency) => updateCollege(college.id, { residency: value })}
+                className="grid grid-cols-3 gap-2"
+              >
+                <div>
+                  <RadioGroupItem value="In-State" id="in-state" className="peer sr-only" />
+                  <Label htmlFor="in-state" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    <Home className="mb-1 h-5 w-5" />
+                    In-State
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="Out-of-State" id="out-of-state" className="peer sr-only" />
+                  <Label htmlFor="out-of-state" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    <Globe className="mb-1 h-5 w-5" />
+                    Out-of-State
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="International" id="international" className="peer sr-only" />
+                  <Label htmlFor="international" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    <Globe className="mb-1 h-5 w-5" />
+                    Int'l
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
             <div className="space-y-2">
                 <Label htmlFor="major">Intended Major</Label>
                 <Select value={college.selectedMajor} onValueChange={(value) => updateCollege(college.id, { selectedMajor: value })}>
@@ -294,7 +325,7 @@ export function CollegeDetailsView() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><UserCheck className="text-primary"/>Target Profile (50% Chance)</CardTitle>
                 <CardDescription>
-                    See what an average accepted student looks like for your selected major.
+                    See what an average accepted student looks like for your selected major and residency.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

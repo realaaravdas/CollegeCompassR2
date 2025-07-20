@@ -103,6 +103,7 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
           gpa: lastSelectedCollege?.gpa,
           testScore: lastSelectedCollege?.testScore,
           testType: lastSelectedCollege?.testType || 'SAT',
+          residency: lastSelectedCollege?.residency || 'Out-of-State',
           essays: [],
           numberOfEssays: 0,
         };
@@ -146,8 +147,8 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   }, [user, selectedCollegeId, toast]);
 
   const estimateAcceptanceRate = useCallback(async (college: College) => {
-    if (!college.gpa || !college.testScore || !college.selectedMajor) {
-      throw new Error('GPA, test score, and major must be selected.');
+    if (!college.gpa || !college.testScore || !college.selectedMajor || !college.residency) {
+      throw new Error('GPA, test score, residency, and major must be selected.');
     }
     setIsAiLoading(true);
     try {
@@ -156,7 +157,8 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
         major: college.selectedMajor,
         gpa: college.gpa,
         testScore: college.testScore,
-        testType: college.testType || 'SAT', // Pass the test type, default to SAT
+        testType: college.testType || 'SAT',
+        residency: college.residency,
       });
       
       updateCollege(college.id, {
@@ -171,14 +173,15 @@ export function CollegeDataProvider({ children }: { children: ReactNode }) {
   }, [updateCollege]);
 
   const generateStudentProfile = useCallback(async (college: College) => {
-    if (!college.selectedMajor) {
-        throw new Error('A major must be selected.');
+    if (!college.selectedMajor || !college.residency) {
+        throw new Error('A major and residency must be selected.');
     }
     setIsProfileLoading(true);
     try {
         const result = await generateStudentProfileFlow({
             collegeName: college.name,
             major: college.selectedMajor,
+            residency: college.residency,
         });
         updateCollege(college.id, { studentProfile: result });
     } finally {
