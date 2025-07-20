@@ -39,11 +39,11 @@ function getCollegeInitials(name: string) {
   return name.substring(0, 2).toUpperCase();
 }
 
-const getRateColorClass = (rate?: number) => {
-    if (rate === undefined) return '';
-    if (rate > 50) return 'border-l-green-500';
-    if (rate > 20) return 'border-l-yellow-500';
-    return 'border-l-red-500';
+const getRateCategory = (rate?: number) => {
+    if (rate === undefined) return undefined;
+    if (rate > 50) return 'high';
+    if (rate > 20) return 'medium';
+    return 'low';
 };
 
 
@@ -77,10 +77,8 @@ export function CollegeSidebar() {
                   onClick={() => setSelectedCollegeId(college.id)}
                   isActive={selectedCollegeId === college.id}
                   tooltip={college.name}
-                  className={cn(
-                    "border-l-4 border-transparent",
-                    getRateColorClass(college.estimatedAcceptanceRate?.rate)
-                  )}
+                  className="border-l-4 border-transparent"
+                  data-rate-category={getRateCategory(college.estimatedAcceptanceRate?.rate)}
                 >
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="text-xs">

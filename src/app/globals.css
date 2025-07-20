@@ -86,3 +86,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  [data-sidebar=menu-button][data-rate-category="high"] {
+    @apply border-l-green-500;
+  }
+  [data-sidebar=menu-button][data-rate-category="medium"] {
+    @apply border-l-yellow-500;
+  }
+  [data-sidebar=menu-button][data-rate-category="low"] {
+    @apply border-l-red-500;
+  }
+}
