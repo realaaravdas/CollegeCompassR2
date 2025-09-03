@@ -25,7 +25,8 @@ export async function POST(request: Request) {
 
     const session = await lucia.createSession(existingUser.username, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    const cookieStore = await cookies();
+    cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
     return NextResponse.json({ message: 'Logged in successfully', user: { username: existingUser.username } }, { status: 200 });
   } catch (e: any) {

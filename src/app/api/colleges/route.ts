@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 
 async function getUsername() {
-  const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
   if (!sessionId) return null;
   const { user } = await lucia.validateSession(sessionId);
   return user?.id ?? null;
