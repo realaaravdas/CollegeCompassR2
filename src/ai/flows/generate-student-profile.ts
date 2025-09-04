@@ -46,7 +46,7 @@ const generateStudentProfilePrompt = ai.definePrompt({
   name: 'generateStudentProfilePrompt',
   input: { schema: GenerateStudentProfileInputSchema },
   output: { schema: GenerateStudentProfileOutputSchema },
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-2.5-flash-lite',
   prompt: `You are an AI assistant specialized in college admissions.
   
     Based on the provided college, major, and residency status, create a profile for a hypothetical student who would have a 50% chance of being accepted.

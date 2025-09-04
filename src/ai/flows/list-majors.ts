@@ -35,7 +35,7 @@ const listMajorsPrompt = ai.definePrompt({
   name: 'listMajorsPrompt',
   input: { schema: ListMajorsInputSchema },
   output: { schema: ListMajorsOutputSchema },
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-2.5-flash-lite',
   prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
 });
 
