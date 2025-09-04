@@ -57,6 +57,34 @@ const populateCollegeInfoPrompt = ai.definePrompt({
     `,
 });
 
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Only retry on 503 Service Unavailable errors
+      if (error?.status === 503 && attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+        console.log(`Gemini API overloaded, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+  
+  throw lastError!;
+}
+
 const populateCollegeInfoFlow = ai.defineFlow(
   {
     name: 'populateCollegeInfoFlow',
@@ -67,7 +95,8 @@ const populateCollegeInfoFlow = ai.defineFlow(
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('The GEMINI_API_KEY environment variable is not set.');
     }
-    const { output } = await populateCollegeInfoPrompt(input);
+    
+    const { output } = await retryWithBackoff(() => populateCollegeInfoPrompt(input));
     return output!;
   }
 );
