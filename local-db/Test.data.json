@@ -1,3 +1,55 @@
 {
-  "colleges": []
+  "colleges": [
+    {
+      "id": "harvard-university-1756955801482",
+      "name": "Harvard University",
+      "deadlines": "Regular Decision: January 1, Early Action: November 1",
+      "applicationPortal": "https://college.harvard.edu/apply",
+      "majors": [
+        "African and African American Studies",
+        "Anthropology",
+        "Applied Mathematics",
+        "Astrophysics",
+        "Biomedical Engineering",
+        "Chemical and Physical Biology",
+        "Chemistry",
+        "Classics",
+        "Comparative Literature",
+        "Computer Science",
+        "Earth and Planetary Sciences",
+        "Economics",
+        "Electrical Engineering",
+        "English",
+        "Environmental Science and Public Policy",
+        "Folklore and Mythology",
+        "Germanic Languages and Literatures",
+        "Government",
+        "History",
+        "History and Science",
+        "Human Developmental and Regenerative Biology",
+        "Integrative Biology",
+        "Mathematics",
+        "Mechanical Engineering",
+        "Molecular and Cellular Biology",
+        "Music",
+        "Near Eastern Languages and Civilizations",
+        "Neuroscience",
+        "Philosophy",
+        "Physics",
+        "Psychology",
+        "Religion",
+        "Romance Languages and Literatures",
+        "Slavic Languages and Literatures",
+        "Sociology",
+        "Statistics",
+        "Theater, Dance & Media",
+        "Visual and Environmental Studies"
+      ],
+      "acceptanceRate": "3.4%",
+      "testType": "SAT",
+      "residency": "Out-of-State",
+      "essays": [],
+      "numberOfEssays": 0
+    }
+  ]
 }
