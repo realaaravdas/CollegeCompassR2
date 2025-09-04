@@ -43,5 +43,4 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
-..env.un~
 .claude/settings.local.json
