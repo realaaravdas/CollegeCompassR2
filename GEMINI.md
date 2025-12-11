@@ -1,12 +1,12 @@
 ## Project Overview
 
-This project is a Next.js application called "College Compass," an AI-powered college application tracker. It uses Firebase for the backend, Genkit with Google AI for AI features, and a variety of UI components from Radix UI and custom components. The application provides features for user authentication (login/registration) and managing a list of colleges.
+This project is a Next.js application called "College Compass," an AI-powered college application tracker. It uses Firebase for the backend, Genkit with DeepSeek v3 for AI features, and a variety of UI components from Radix UI and custom components. The application provides features for user authentication (login/registration) and managing a list of colleges.
 
 **Key Technologies:**
 
 *   **Framework:** Next.js
 *   **Backend:** Firebase
-*   **AI:** Genkit with Google AI
+*   **AI:** Genkit with DeepSeek v3 (OpenAI-compatible API)
 *   **UI:** Radix UI, Tailwind CSS, custom React components
 *   **Language:** TypeScript
 

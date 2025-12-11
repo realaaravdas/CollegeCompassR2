@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow to populate college information using the Gemini API.
+ * @fileOverview This file defines a Genkit flow to populate college information using the DeepSeek API.
  *
  * - populateCollegeInfo - A function that handles the college information population process.
  * - PopulateCollegeInfoInput - The input type for the populateCollegeInfo function.
@@ -45,7 +45,7 @@ const populateCollegeInfoPrompt = ai.definePrompt({
   name: 'populateCollegeInfoPrompt',
   input: { schema: PopulateCollegeInfoInputSchema },
   output: { schema: PopulateCollegeInfoOutputSchema },
-  model: 'googleai/gemini-2.5-flash-lite',
+  model: 'deepseek/deepseek-chat',
   prompt: `You are an AI assistant designed to gather information about colleges.
   
     Based on the college name provided, you will find the deadlines, application portal URL, list of majors, and acceptance rate.
@@ -73,7 +73,7 @@ async function retryWithBackoff<T>(
       // Only retry on 503 Service Unavailable errors
       if (error?.status === 503 && attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
-        console.log(`Gemini API overloaded, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+        console.log(`DeepSeek API overloaded, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -92,10 +92,6 @@ const populateCollegeInfoFlow = ai.defineFlow(
     outputSchema: PopulateCollegeInfoOutputSchema,
   },
   async (input) => {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
-    
     const { output } = await retryWithBackoff(() => populateCollegeInfoPrompt(input));
     return output!;
   }

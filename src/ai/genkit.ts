@@ -1,6 +1,12 @@
 import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import openAICompatible from '@genkit-ai/compat-oai';
 
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [
+    openAICompatible({
+      name: 'deepseek',
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: 'https://api.deepseek.com/v1',
+    })
+  ],
 });

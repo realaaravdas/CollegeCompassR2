@@ -35,7 +35,7 @@ const listMajorsPrompt = ai.definePrompt({
   name: 'listMajorsPrompt',
   input: { schema: ListMajorsInputSchema },
   output: { schema: ListMajorsOutputSchema },
-  model: 'googleai/gemini-2.5-flash-lite',
+  model: 'deepseek/deepseek-chat',
   prompt: `What are all the majors offered at {{collegeName}}? Please provide a comprehensive list.`,
 });
 
@@ -46,9 +46,6 @@ const listMajorsFlow = ai.defineFlow(
     outputSchema: ListMajorsOutputSchema,
   },
   async (input) => {
-     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
     const { output } = await listMajorsPrompt(input);
     return output!;
   }
