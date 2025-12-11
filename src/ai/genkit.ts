@@ -5,8 +5,8 @@ export const ai = genkit({
   plugins: [
     openAICompatible({
       name: 'deepseek',
-      apiKey: process.env.OPENAI_API_KEY || 'sk-e3d2e629fe2d46b3952525e4c7a7a6e1',
-      baseURL: 'https://api.deepseek.com',
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: 'https://api.deepseek.com/v1',
     })
   ],
 });
