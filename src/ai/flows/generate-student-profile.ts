@@ -46,7 +46,7 @@ const generateStudentProfilePrompt = ai.definePrompt({
   name: 'generateStudentProfilePrompt',
   input: { schema: GenerateStudentProfileInputSchema },
   output: { schema: GenerateStudentProfileOutputSchema },
-  model: 'googleai/gemini-2.5-flash-lite',
+  model: 'deepseek/deepseek-chat',
   prompt: `You are an AI assistant specialized in college admissions.
   
     Based on the provided college, major, and residency status, create a profile for a hypothetical student who would have a 50% chance of being accepted.
@@ -68,9 +68,6 @@ const generateStudentProfileFlow = ai.defineFlow(
     outputSchema: GenerateStudentProfileOutputSchema,
   },
   async (input) => {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
     const { output } = await generateStudentProfilePrompt(input);
     return output!;
   }

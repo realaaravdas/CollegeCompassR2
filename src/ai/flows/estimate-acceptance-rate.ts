@@ -53,7 +53,7 @@ const estimateAcceptanceRatePrompt = ai.definePrompt({
   name: 'estimateAcceptanceRatePrompt',
   input: { schema: EstimateAcceptanceRateInputSchema },
   output: { schema: EstimateAcceptanceRateOutputSchema },
-  model: 'googleai/gemini-2.5-flash-lite',
+  model: 'deepseek/deepseek-chat',
   prompt: `You are an AI assistant specialized in estimating college acceptance rates.
   
     Given the following information about a student and the college they are applying to, estimate their acceptance rate for the specified major. Provide a percentage as the acceptanceRateEstimate, and explain your reasoning in the reasoning field.
@@ -75,9 +75,6 @@ const estimateAcceptanceRateFlow = ai.defineFlow(
     outputSchema: EstimateAcceptanceRateOutputSchema,
   },
   async (input) => {
-     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
     const { output } = await estimateAcceptanceRatePrompt(input);
     return output!;
   }

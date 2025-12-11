@@ -45,7 +45,7 @@ const populateCollegeInfoPrompt = ai.definePrompt({
   name: 'populateCollegeInfoPrompt',
   input: { schema: PopulateCollegeInfoInputSchema },
   output: { schema: PopulateCollegeInfoOutputSchema },
-  model: 'googleai/gemini-2.5-flash-lite',
+  model: 'deepseek/deepseek-chat',
   prompt: `You are an AI assistant designed to gather information about colleges.
   
     Based on the college name provided, you will find the deadlines, application portal URL, list of majors, and acceptance rate.
@@ -92,10 +92,6 @@ const populateCollegeInfoFlow = ai.defineFlow(
     outputSchema: PopulateCollegeInfoOutputSchema,
   },
   async (input) => {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
-    
     const { output } = await retryWithBackoff(() => populateCollegeInfoPrompt(input));
     return output!;
   }
